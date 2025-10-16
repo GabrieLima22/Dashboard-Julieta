@@ -1,0 +1,6 @@
+{
+  "name": "julieta/dashboard",
+  "require": {
+    "php": ">=8.1"
+  }
+}
