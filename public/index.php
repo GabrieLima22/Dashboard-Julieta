@@ -13,6 +13,9 @@ $cfg = require __DIR__.'/../app/config.php';
 $error  = null;
 $logged = true;   // <- força logado (troque pela sua lógica de auth real)
 $data   = get_data(false);
+if(function_exists('normalize_dataset')){
+  $data = normalize_dataset($data);
+}
 
 // Ações básicas
 $action = $_POST['action'] ?? $_GET['action'] ?? null;
@@ -54,6 +57,37 @@ function next_due_for_course($entityName, $courseName, $installments){
   return $min; // timestamp ou null
 }
 
+function course_financials(array $item): array{
+  $value    = isset($item['value']) ? (float)$item['value'] : 0.0;
+  $received = isset($item['received']) ? (float)$item['received'] : 0.0;
+  $pending  = isset($item['pending']) ? (float)$item['pending'] : 0.0;
+
+  if($pending < 0) $pending = 0.0;
+
+  if($value <= 0 && ($received > 0 || $pending > 0)){
+    $value = $received + $pending;
+  }
+  if($value > 0 && $received > $value){
+    $value = $received;
+  }
+
+  $pending = max(0.0, $value - $received);
+
+  return [round($value, 2), round($received, 2), round($pending, 2)];
+}
+
+function entity_financials(array $items): array{
+  $total = 0.0;
+  $received = 0.0;
+  foreach($items as $item){
+    [$courseTotal, $courseReceived] = course_financials($item);
+    $total    += $courseTotal;
+    $received += $courseReceived;
+  }
+  $pending = max(0.0, $total - $received);
+  return [round($total, 2), round($received, 2), round($pending, 2)];
+}
+
 $ultimaSync = $logged ? human_ago($data['created_at'] ?? null) : '-';
 
 // -------- filtros (chips) --------
@@ -65,6 +99,7 @@ $Q = [
   'q'         => trim($_GET['q'] ?? ''),
   'status'    => $_GET['status'] ?? 'all',   // all|pending|overdue|paid
   'month'     => trim($_GET['month'] ?? ''), // YYYY-MM
+  'due_in'    => (int)($_GET['due_in'] ?? 7), // 7|15|30
 ];
 
 function qstr($overrides=[]){
@@ -146,7 +181,7 @@ if($logged && !empty($data['entities'])){
 
   foreach($data['entities'] as $e){
     if($hasReal && isset($e['name']) && trim($e['name'])==='-') continue; // remove "-" apenas se existir outra entidade
-    $bucket=['name'=>$e['name'] ?? '-', 'items'=>[], 'total'=>0, 'received'=>0];
+    $bucket=['name'=>$e['name'] ?? '-', 'items'=>[], 'total'=>0.0, 'received'=>0.0, 'pending'=>0.0];
 
     foreach($e['items'] as $it){
       // busca textual
@@ -162,11 +197,20 @@ if($logged && !empty($data['entities'])){
         if(!$exists) continue;
       }
 
-      $bucket['items'][]=$it;
-      $bucket['total']+=(float)($it['value'] ?? 0);
-      $bucket['received']+=(float)($it['received'] ?? 0);
+      [$courseTotal, $courseReceived, $coursePending] = course_financials($it);
+      $normalizedItem = $it;
+      $normalizedItem['value']    = $courseTotal;
+      $normalizedItem['received'] = $courseReceived;
+      $normalizedItem['pending']  = $coursePending;
+
+      $bucket['items'][]   = $normalizedItem;
+      $bucket['total']    += $courseTotal;
+      $bucket['received'] += $courseReceived;
     }
-    if($bucket['items']) $groupFiltered[]=$bucket;
+    if($bucket['items']){
+      $bucket['pending'] = max(0.0, $bucket['total'] - $bucket['received']);
+      $groupFiltered[] = $bucket;
+    }
   }
 }
 
@@ -259,9 +303,9 @@ $pctOvd=$base>0?min(100,round($overdue/$base*100)):0;
         <span class="hero__halo"></span>
       </div>
       <div class="hero__text">
-        <span class="hero__tag">JML - Estúdio Financeiro</span>
+        <span class="hero__tag">JML - Dashboard Financeiro</span>
         <h1 class="hero__title"><?= htmlspecialchars($cfg['APP_NAME'] ?? 'App', ENT_QUOTES, 'UTF-8') ?></h1>
-        <p class="hero__subtitle">Curadoria de dados</p>
+        <p class="hero__subtitle">Curadoria de dados 2025</p>
       </div>
       <div class="hero__actions">
         <button id="btnConfig" class="btn hero__btn" type="button">&#9881; Configurar</button>
@@ -274,25 +318,72 @@ $pctOvd=$base>0?min(100,round($overdue/$base*100)):0;
 
     <!-- KPIs (regra nova) -->
     <div class="grid kpis">
-      <div class="card kpi kpi--rec" data-open="pending" tabindex="0" role="button" aria-label="Abrir detalhes: A Receber">
+      <div class="card kpi kpi--rec" data-open="pending" tabindex="0" role="button" aria-label="Abrir detalhes: A Receber" onclick="window.dashboardOpenStatus && window.dashboardOpenStatus('pending')">
         <h4>A Receber<?= $hasFilter ? ' (visão geral)' : '' ?></h4>
         <div class="amount"><?= brl($receivable) ?></div>
         <div class="progress"><div class="bar bar--rec" style="width:<?= $pctRec ?>%"></div></div>
         <div class="sub">Soma da coluna “Valor a Receber”</div>
       </div>
-      <div class="card kpi kpi--rcv" data-open="paid" tabindex="0" role="button" aria-label="Abrir detalhes: Recebido">
+      <div class="card kpi kpi--rcv" data-open="paid" tabindex="0" role="button" aria-label="Abrir detalhes: Recebido" onclick="window.dashboardOpenStatus && window.dashboardOpenStatus('paid')">
         <h4>Recebido<?= $hasFilter ? ' (visão geral)' : '' ?></h4>
         <div class="amount amount--ok"><?= brl($received) ?></div>
         <div class="progress"><div class="bar bar--rcv" style="width:<?= $pctRcvd ?>%"></div></div>
         <div class="sub">Soma dos Pagamentos 1–6</div>
       </div>
-      <div class="card kpi kpi--ovd" data-open="overdue" tabindex="0" role="button" aria-label="Abrir detalhes: Vencidos">
+      <div class="card kpi kpi--ovd" data-open="overdue" tabindex="0" role="button" aria-label="Abrir detalhes: Vencidos" onclick="window.dashboardOpenStatus && window.dashboardOpenStatus('overdue')">
         <h4>Vencidos<?= $hasFilter ? ' (visão geral)' : '' ?></h4>
         <div class="amount amount--bad"><?= brl($overdue) ?></div>
         <div class="progress"><div class="bar bar--ovd" style="width:<?= $pctOvd ?>%"></div></div>
         <div class="sub"><span class="chip chip--danger">A receber vencido</span></div>
       </div>
     </div>
+
+
+    <!-- Vencendo em X dias -->
+    <div class="section-title">Vencendo em
+      <?php
+        $validDueIn = in_array($Q['due_in'], [7,15,30], true) ? $Q['due_in'] : 7;
+        echo ' '.$validDueIn.' dias';
+      ?>
+    </div>
+    <div class="card" style="margin-bottom:14px">
+      <div class="chips" style="margin-bottom:12px">
+        <?php foreach([7,15,30] as $di):
+          $active = $validDueIn===$di ? 'is-active' : '';
+          $href = '?'.qstr(['due_in'=>$di]);
+        ?>
+          <a class="chip chip--toggle <?= $active ?>" href="<?= $href ?>"><?= $di ?> dias</a>
+        <?php endforeach; ?>
+      </div>
+      <?php
+        $limitDate = strtotime('+'.$validDueIn.' days', strtotime('today'));
+        $upcoming = array_values(array_filter(
+          $filteredInstallments,
+          fn($i) => ($i['status']??'')!=='paid' &&
+                    strtotime($i['due_date']??'2099-12-31') <= $limitDate &&
+                    strtotime($i['due_date']??'1970-01-01') >= strtotime('today')
+        ));
+        usort($upcoming,fn($a,$b)=>strcmp(($a['due_date']??''),($b['due_date']??'')));
+      ?>
+      <?php if(!$upcoming): ?>
+        <div class="alert">Nada por enquanto.</div>
+      <?php else: ?>
+        <div class="list">
+          <?php foreach($upcoming as $u): ?>
+            <div class="item" data-tip="<?= htmlspecialchars(($u['entity']??'').' - '.($u['course']??'').' - Venc.: '.dmy($u['due_date']??'').' - '.brl((float)($u['amount']??0)).' - '.strtoupper($u['status']??''), ENT_QUOTES, 'UTF-8') ?>">
+              <div class="top">
+                <div class="entity"><?= htmlspecialchars($u['entity'] ?? '', ENT_QUOTES, 'UTF-8') ?> — <?= htmlspecialchars($u['course'] ?? '', ENT_QUOTES, 'UTF-8') ?></div>
+                <div class="chips">
+                  <span class="chip">Venc.: <?= dmy($u['due_date'] ?? '') ?></span>
+                  <span class="chip mono"><?= brl((float)($u['amount'] ?? 0)) ?></span>
+                </div>
+              </div>
+            </div>
+          <?php endforeach; ?>
+        </div>
+      <?php endif; ?>
+    </div>
+
 
     <!-- LISTA DE ENTIDADES -->
     <div class="section-title" style="display:flex;align-items:center;gap:12px">
@@ -354,89 +445,93 @@ $pctOvd=$base>0?min(100,round($overdue/$base*100)):0;
     </div>
 
     <!-- VISUAIS -->
-    <?php if($view==='grid'): ?>
-      <!-- GRADE -->
-      <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px">
-        <?php foreach($groupFiltered as $e): ?>
-          <?php
-            $entTotal   = (float)($e['total'] ?? 0);
-            $entReceived= (float)($e['received'] ?? 0);
-            $pct        = $entTotal > 0 ? min(100, round(($entReceived / $entTotal) * 100)) : 0;
+  <?php if($view==='grid'): ?>
+  <!-- GRADE -->
+  <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px">
+
+    <?php foreach($groupFiltered as $e): ?>
+      <?php
+        [$entTotal, $entReceived, $entPending] = entity_financials($e['items'] ?? []);
+        $pct = $entTotal > 0 ? min(100, round(($entReceived / $entTotal) * 100)) : 0;
+      ?>
+
+      <div class="card js-entity"
+           data-entity="<?= htmlspecialchars($e['name'] ?? '-', ENT_QUOTES, 'UTF-8') ?>"
+           data-tip="<?= htmlspecialchars('Total '.brl($entTotal).' - Recebido '.brl($entReceived), ENT_QUOTES, 'UTF-8') ?>">
+        <div class="entity" style="margin-bottom:8px">
+          <?= htmlspecialchars($e['name'] ?? '-', ENT_QUOTES, 'UTF-8') ?>
+        </div>
+        <div class="progress"><div class="bar" style="width:<?= $pct ?>%" title="<?= $pct ?>%"></div></div>
+        <div class="chips" style="margin-top:10px">
+          <span class="chip">Recebido <?= brl($entReceived) ?></span>
+          <span class="chip">Falta <?= brl($entPending) ?></span>
+          <span class="chip mono">Total <?= brl($entTotal) ?></span>
+        </div>
+
+        <div class="list" style="margin-top:12px">
+          <?php foreach($e['items'] as $it):
+            [$courseTotal, $courseReceived, $coursePending] = course_financials($it);
+            $coursePct = $courseTotal > 0 ? min(100, round(($courseReceived / $courseTotal) * 100)) : 0;
+
+            $chips = [];
+            if ($Q['status']!=='all') $chips[] = strtoupper($Q['status']);
+            if ($Q['month']!=='')     $chips[] = month_human($Q['month'],$MONTH_NAMES);
+
+            $nextTs   = next_due_for_course($e['name'] ?? '-', $it['course'] ?? '-', $filteredInstallments);
+            $nextLabel= $nextTs ? date('d/m/Y', $nextTs) : null;
+            $isLongCourse = mb_strlen($it['course'] ?? '', 'UTF-8') > 65;
+            $itemClass = 'list-item js-course'.($isLongCourse ? ' list-item--long' : '');
           ?>
-          <div class="card js-entity" data-entity="<?= htmlspecialchars($e['name'] ?? '-', ENT_QUOTES, 'UTF-8') ?>" data-tip="<?= htmlspecialchars('Total '.brl($entTotal).' - Recebido '.brl($entReceived), ENT_QUOTES, 'UTF-8') ?>">
-            <div class="entity" style="margin-bottom:8px"><?= htmlspecialchars($e['name'] ?? '-', ENT_QUOTES, 'UTF-8') ?></div>
-            <div class="progress"><div class="bar" style="width:<?= $pct ?>%"></div></div>
-            <div class="chips" style="margin-top:10px">
-              <span class="chip">Recebido <?= brl($entReceived) ?></span>
-              <span class="chip">Falta <?= brl(max(0,$entTotal-$entReceived)) ?></span>
-              <span class="chip mono">Total <?= brl($entTotal) ?></span>
-            </div>
-            <div class="list" style="margin-top:12px">
-              <?php foreach($e['items'] as $it):
-                $courseValue    = (float)($it['value'] ?? 0);
-                $courseReceived = (float)($it['received'] ?? 0);
-                $coursePending  = (float)($it['pending'] ?? 0);
-                $coursePct      = $courseValue > 0 ? min(100, round(($courseReceived / $courseValue) * 100)) : 0;
-
-                // chips de filtro ativos
-                $chips = [];
-                if ($Q['status']!=='all') $chips[] = strtoupper($Q['status']);
-                if ($Q['month']!=='')     $chips[] = month_human($Q['month'],$MONTH_NAMES);
-
-                // próxima data não paga do curso
-                $nextTs   = next_due_for_course($e['name'] ?? '-', $it['course'] ?? '-', $filteredInstallments);
-                $nextLabel= $nextTs ? date('d/m/Y', $nextTs) : null;
-
-                // labels de datas com texto explícito
-                $di = $it['date_start'] ? dmy($it['date_start']) : '—';
-                $df = $it['date_end']   ? dmy($it['date_end'])   : '—';
-                $metaTxt = "dataInicio: $di · dataFim: $df · CH ".htmlspecialchars($it['ch'] ?? '-', ENT_QUOTES, 'UTF-8');
-              ?>
-                <div class="list-item js-course" data-entity="<?= htmlspecialchars($e['name'] ?? '-', ENT_QUOTES, 'UTF-8') ?>" data-course="<?= htmlspecialchars($it['course'] ?? '-', ENT_QUOTES, 'UTF-8') ?>">
-                  <div class="list-item__body">
-                    <div class="list-item__course">
-                    <div class="list-item__meta">
-  <?php if (!empty($it['date_start'])): ?>
-    <span class="pill">Data início: <?= dmy($it['date_start']) ?></span>
-  <?php endif; ?>
-
-  <?php if (!empty($it['date_end'])): ?>
-    <span class="pill">Data fim: <?= dmy($it['date_end']) ?></span>
-  <?php endif; ?>
-
-  <span class="pill">CH <?= htmlspecialchars($it['ch'] ?? '-', ENT_QUOTES, 'UTF-8') ?></span>
-</div>
-
-                    <div class="list-item__values">
-                      <span class="list-item__total"><?= brl($courseValue) ?></span>
-                      <?php if($chips): ?>
-                        <div class="list-item__tags chips" style="justify-content:flex-end">
-                          <?php foreach($chips as $c): ?><span class="chip"><?= htmlspecialchars($c, ENT_QUOTES, 'UTF-8') ?></span><?php endforeach; ?>
-                        </div>
-                      <?php endif; ?>
-                    </div>
+            <div class="<?= $itemClass ?>"
+                 data-entity="<?= htmlspecialchars($e['name'] ?? '-', ENT_QUOTES, 'UTF-8') ?>"
+                 data-course="<?= htmlspecialchars($it['course'] ?? '-', ENT_QUOTES, 'UTF-8') ?>">
+              <div class="list-item__body">
+                <div class="list-item__course">
+                  <div class="list-item__meta">
+                    <?php if (!empty($it['date_start'])): ?>
+                      <span class="pill">dataInicio: <?= dmy($it['date_start']) ?></span>
+                    <?php endif; ?>
+                    <?php if (!empty($it['date_end'])): ?>
+                      <span class="pill">dataFim: <?= dmy($it['date_end']) ?></span>
+                    <?php endif; ?>
+                    <span class="pill">CH <?= htmlspecialchars($it['ch'] ?? '-', ENT_QUOTES, 'UTF-8') ?></span>
                   </div>
-                  <div class="progress progress--item"><div class="bar" style="width:<?= $coursePct ?>%"></div></div>
                 </div>
-              <?php endforeach; ?>
+                <div class="list-item__values">
+                  <span class="list-item__total"><?= brl($courseTotal) ?></span>
+                  <?php if($chips): ?>
+                    <div class="list-item__tags chips" style="justify-content:flex-end">
+                      <?php foreach($chips as $c): ?>
+                        <span class="chip"><?= htmlspecialchars($c, ENT_QUOTES, 'UTF-8') ?></span>
+                      <?php endforeach; ?>
+                    </div>
+                  <?php endif; ?>
+                </div>
+              </div>
+              <div class="progress progress--item"><div class="bar" style="width:<?= $coursePct ?>%" title="<?= $coursePct ?>%"></div></div>
             </div>
-          </div>
-        <?php endforeach; ?>
-        <?php if(!$groupFiltered): ?><div class="alert">Nenhum resultado para os filtros atuais.</div><?php endif; ?>
+          <?php endforeach; ?>
+        </div>
       </div>
+    <?php endforeach; ?>
+
+    <?php if(!$groupFiltered): ?>
+      <div class="alert">Nenhum resultado para os filtros atuais.</div>
+    <?php endif; ?>
+  </div>
 
     <?php elseif($view==='carousel'): ?>
       <!-- CARROSSEL -->
       <div class="card" style="overflow:hidden">
         <div style="display:flex; gap:16px; overflow:auto; scroll-snap-type:x mandatory; padding-bottom:6px">
           <?php foreach($groupFiltered as $e): ?>
-            <?php $entTotal=(float)$e['total']; $entReceived=(float)$e['received']; $pct=$entTotal>0?min(100,round($entReceived/$entTotal*100)):0; ?>
+            <?php [$entTotal, $entReceived, $entPending] = entity_financials($e['items'] ?? []); $pct=$entTotal>0?min(100,round($entReceived/$entTotal*100)):0; ?>
             <div class="card js-entity" data-entity="<?= htmlspecialchars($e['name'] ?? '-', ENT_QUOTES, 'UTF-8') ?>" style="min-width:340px; scroll-snap-align:start">
               <div class="entity" style="margin-bottom:8px"><?= htmlspecialchars($e['name'] ?? '', ENT_QUOTES, 'UTF-8') ?></div>
-              <div class="progress"><div class="bar" style="width:<?= $pct ?>%"></div></div>
+              <div class="progress"><div class="bar" style="width:<?= $pct ?>%" title="<?= $pct ?>%"></div></div>
               <div class="chips" style="margin-top:10px">
                 <span class="chip">Recebido <?= brl($entReceived) ?></span>
-                <span class="chip">Falta <?= brl(max(0,$entTotal-$entReceived)) ?></span>
+                <span class="chip">Falta <?= brl($entPending) ?></span>
                 <span class="chip mono">Total <?= brl($entTotal) ?></span>
               </div>
             </div>
@@ -450,9 +545,8 @@ $pctOvd=$base>0?min(100,round($overdue/$base*100)):0;
       <div class="acc list">
         <?php foreach($visibleGroups as $e): ?>
           <?php
-            $entTotal    = (float)($e['total'] ?? 0);
-            $entReceived = (float)($e['received'] ?? 0);
-            $pct         = $entTotal > 0 ? min(100, round(($entReceived / $entTotal) * 100)) : 0;
+            [$entTotal, $entReceived, $entPending] = entity_financials($e['items'] ?? []);
+            $pct = $entTotal > 0 ? min(100, round(($entReceived / $entTotal) * 100)) : 0;
           ?>
           <details open>
             <summary>
@@ -461,19 +555,21 @@ $pctOvd=$base>0?min(100,round($overdue/$base*100)):0;
               </div>
               <div class="chips">
                 <span class="chip">Recebido <?= brl($entReceived) ?></span>
-                <span class="chip">Falta <?= brl(max(0,$entTotal-$entReceived)) ?></span>
+                <span class="chip">Falta <?= brl($entPending) ?></span>
                 <span class="chip mono">Total <?= brl($entTotal) ?></span>
               </div>
             </summary>
 
             <div class="group-body">
-              <div class="progress progress--group"><div class="bar" style="width:<?= $pct ?>%"></div></div>
+      <div class="progress progress--group">
+  <div class="bar" style="width:<?= $pct ?>%" title="<?= $pct ?>%"></div>
+</div>
+              
+
 
               <?php foreach($e['items'] as $it):
-                $courseValue    = (float)($it['value'] ?? 0);
-                $courseReceived = (float)($it['received'] ?? 0);
-                $coursePending  = (float)($it['pending'] ?? 0);
-                $coursePct      = $courseValue > 0 ? min(100, round(($courseReceived / $courseValue) * 100)) : 0;
+                [$courseTotal, $courseReceived, $coursePending] = course_financials($it);
+                $coursePct      = $courseTotal > 0 ? min(100, round(($courseReceived / $courseTotal) * 100)) : 0;
 
                 // próxima data não paga
                 $nextTs = next_due_for_course($e['name'] ?? '-', $it['course'] ?? '-', $filteredInstallments);
@@ -482,7 +578,7 @@ $pctOvd=$base>0?min(100,round($overdue/$base*100)):0;
                 $tipParts = array_filter([
                   $e['name'] ?? '',
                   $it['course'] ?? '',
-                  'Total '.brl($courseValue),
+                  'Total '.brl($courseTotal),
                   'Recebidos '.brl($courseReceived),
                   'Falta '.brl($coursePending)
                 ]);
@@ -497,11 +593,14 @@ $pctOvd=$base>0?min(100,round($overdue/$base*100)):0;
                 $di = $it['date_start'] ? dmy($it['date_start']) : '—';
                 $df = $it['date_end']   ? dmy($it['date_end'])   : '—';
                 $metaTxt = "dataInicio: $di · dataFim: $df · CH ".htmlspecialchars($it['ch'] ?? '-', ENT_QUOTES, 'UTF-8');
+
+                 $isLongCourse = mb_strlen($it['course'] ?? '', 'UTF-8') > 65;
+                 $itemClass = 'list-item js-course'.($isLongCourse ? ' list-item--long' : '');
               ?>
-                <div class="list-item js-course" data-entity="<?= htmlspecialchars($e['name'] ?? '-', ENT_QUOTES, 'UTF-8') ?>" data-course="<?= htmlspecialchars($it['course'] ?? '-', ENT_QUOTES, 'UTF-8') ?>" data-tip="<?= $tip ?>">
+                <div class="<?= $itemClass ?>" data-entity="<?= htmlspecialchars($e['name'] ?? '-', ENT_QUOTES, 'UTF-8') ?>" data-course="<?= htmlspecialchars($it['course'] ?? '-', ENT_QUOTES, 'UTF-8') ?>" data-tip="<?= $tip ?>">
                   <div class="list-item__body">
                     <div class="list-item__course">
-                      <div class="list-item__meta">
+                     <div class="list-item__meta">
   <?php if (!empty($it['date_start'])): ?>
     <span class="pill">Data início: <?= dmy($it['date_start']) ?></span>
   <?php endif; ?>
@@ -516,7 +615,7 @@ $pctOvd=$base>0?min(100,round($overdue/$base*100)):0;
                       <strong class="list-item__title"><?= htmlspecialchars($it['course'] ?? '-', ENT_QUOTES, 'UTF-8') ?></strong>
                     </div>
                     <div class="list-item__values">
-                      <span class="list-item__total"><?= brl($courseValue) ?></span>
+                      <span class="list-item__total"><?= brl($courseTotal) ?></span>
                       <span class="list-item__split">
                         <?= brl($courseReceived) ?> recebidos - <?= brl($coursePending) ?> a receber
                         <?php if($nextLabel): ?> · Próx. venc.: <strong><?= htmlspecialchars($nextLabel, ENT_QUOTES, 'UTF-8') ?></strong><?php endif; ?>
@@ -528,7 +627,7 @@ $pctOvd=$base>0?min(100,round($overdue/$base*100)):0;
                       <?php endif; ?>
                     </div>
                   </div>
-                  <div class="progress progress--item"><div class="bar" style="width:<?= $coursePct ?>%"></div></div>
+                  <div class="progress progress--item"><div class="bar" style="width:<?= $coursePct ?>%" title="<?= $coursePct ?>%"></div></div>
                 </div>
               <?php endforeach; ?>
             </div>
@@ -889,22 +988,28 @@ $pctOvd=$base>0?min(100,round($overdue/$base*100)):0;
 
       dBody.innerHTML = sumHtml + installmentsHtml;
 
-    } else if(kind==='overdue' || kind==='pending' || kind==='paid'){
-      // visão simplificada (sem “próximas datas” / “agenda 6m”)
-      var list = norm.slice().sort(function(a,b){
-        var an=(a.entity||'')+(a.course||'');
-        var bn=(b.entity||'')+(b.course||'');
-        return an.localeCompare(bn,'pt-BR');
-      }).map(function(i){
-        var subtitle = [i.entity||'', i.course||''].filter(Boolean).join(' - ');
-        var when = (i.due_date ? new Date(i.due_date).toLocaleDateString('pt-BR') : '-');
-        return '<div class="info-line js-course" data-entity="'+escAttr(i.entity||'-')+'" data-course="'+escAttr(i.course||'-')+'">'+
-               '<div><strong>'+when+'</strong><span>'+esc(subtitle)+'</span></div>'+
-               '<span class="tag">'+formatBRL(i.amount)+'</span></div>';
-      }).join('');
-      var html = '<div class="drawer__section"><header class="drawer__section-head"><h4>Itens</h4></header><div class="drawer__list">'+(list||'<div class="alert">Nada aqui.</div>')+'</div></div>';
-      dBody.innerHTML = summaryHtml + html;
-    }
+   } else if (kind==='overdue' || kind==='pending' || kind==='paid') {
+  // visão simplificada (ordenado: mais recente no topo)
+  var listItems = norm.slice().sort(function(a,b){
+    var da = a.due_date ? new Date(a.due_date).getTime() : 0;
+    var db = b.due_date ? new Date(b.due_date).getTime() : 0;
+    // DESC: data mais recente primeiro; se empatar, maior valor primeiro
+    return (db - da) || ((b.amount||0) - (a.amount||0));
+  }).map(function(i){
+    var subtitle = [i.entity||'', i.course||''].filter(Boolean).join(' - ');
+    var when = (i.due_date ? new Date(i.due_date).toLocaleDateString('pt-BR') : '-');
+    return '<div class="info-line js-course" data-entity="'+escAttr(i.entity||'-')+'" data-course="'+escAttr(i.course||'-')+'">'+
+           '<div><strong>'+when+'</strong><span>'+esc(subtitle)+'</span></div>'+
+           '<span class="tag">'+formatBRL(i.amount)+'</span></div>';
+  }).join('');
+
+  var html = '<div class="drawer__section">'+
+               '<header class="drawer__section-head"><h4>Itens</h4></header>'+
+               '<div class="drawer__list">'+(listItems || '<div class="alert">Nada aqui.</div>')+'</div>'+
+             '</div>';
+
+  dBody.innerHTML = summaryHtml + html;
+}
 
     if(!drawer.classList.contains('drawer--open')){
       drawer.classList.add('drawer--open');
@@ -978,3 +1083,9 @@ $pctOvd=$base>0?min(100,round($overdue/$base*100)):0;
 </script>
 </body>
 </html>
+
+
+
+
+
+
