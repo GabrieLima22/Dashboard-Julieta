@@ -10,6 +10,9 @@ mb_internal_encoding('UTF-8');
 require __DIR__.'/../app/helpers.php';
 $cfg = require __DIR__.'/../app/config.php';
 
+$logged = true;   // <- força logado
+$data   = get_data(false);
+
 // Ações básicas
 $action = $_POST['action'] ?? $_GET['action'] ?? null;
 
@@ -18,9 +21,6 @@ $action = $_POST['action'] ?? $_GET['action'] ?? null;
 if (isset($_SESSION['u']) && $action === 'sync' && $_SERVER['REQUEST_METHOD'] === 'POST') {
   get_data(true); header('Location: ./?synced=1'); exit;
 }
-
-$logged = isset($_SESSION['u']);
-$data   = $logged ? get_data(false) : null;
 
 // -------- helpers de exibição --------
 if (!function_exists('mb_str_contains')) {
