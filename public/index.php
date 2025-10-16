@@ -1,49 +1,28 @@
-﻿<?php
-// public/index.php (UI/exibição – versão robusta)
-// ------------------------------------------------
+<?php
+// public/index.php — UI/Exibição
 session_start();
 
-// UTF-8
+// UTF-8 sempre
 header('Content-Type: text/html; charset=UTF-8');
 ini_set('default_charset', 'UTF-8');
 mb_internal_encoding('UTF-8');
 
-require __DIR__ . '/../app/helpers.php';
-$cfg = require __DIR__ . '/../app/config.php';
+require __DIR__.'/../app/helpers.php';
+$cfg = require __DIR__.'/../app/config.php';
 
-// -------- ações básicas --------
+// Ações básicas
 $action = $_POST['action'] ?? $_GET['action'] ?? null;
 
-// Login
-if ($action === 'login' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-  $email = trim($_POST['email'] ?? '');
-  $pass  = trim($_POST['password'] ?? '');
-  if ($email === ($cfg['ADMIN_EMAIL'] ?? '') && password_verify($pass, ($cfg['ADMIN_PASS_HASH'] ?? ''))) {
-    $_SESSION['u'] = $email;
-    header('Location: ./');
-    exit;
-  }
-  $error = 'Credenciais inválidas.';
-}
 
-// Logout
-if ($action === 'logout') {
-  session_destroy();
-  header('Location: ./');
-  exit;
-}
-
-// Sync (força atualização)
+// Sync
 if (isset($_SESSION['u']) && $action === 'sync' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-  get_data(true);
-  header('Location: ./?synced=1');
-  exit;
+  get_data(true); header('Location: ./?synced=1'); exit;
 }
 
 $logged = isset($_SESSION['u']);
-$data   = $logged ? (get_data(false) ?: []) : [];
+$data   = $logged ? get_data(false) : null;
 
-// ---------- helpers de exibição ----------
+// -------- helpers de exibição --------
 if (!function_exists('mb_str_contains')) {
   function mb_str_contains($haystack, $needle, $encoding = null) {
     return mb_stripos($haystack, $needle, 0, $encoding ?? 'UTF-8') !== false;
@@ -58,18 +37,20 @@ function human_ago($ts){
   return date('d/m H:i', $ts);
 }
 function dmy($iso){ return $iso ? date('d/m/Y', strtotime($iso)) : '-'; }
-function ymHuman($ym) { return $ym ? date('m/y', strtotime($ym.'-01')) : '-'; }
 
 $ultimaSync = $logged ? human_ago($data['created_at'] ?? null) : '-';
 
-// ---------- filtros (chips) ----------
-$view = in_array(($_GET['view'] ?? 'list'), ['list','grid','carousel'], true) ? $_GET['view'] : 'list';
+// -------- filtros (chips) --------
+// FIX do warning: whitelist + fallback
+$__viewParam = $_GET['view'] ?? 'list';
+$__allowedViews = ['list','grid','carousel'];
+$view = in_array($__viewParam, $__allowedViews, true) ? $__viewParam : 'list';
 
 $Q = [
   'q'         => trim($_GET['q'] ?? ''),
-  'status'    => $_GET['status'] ?? 'all', // all|pending|overdue|paid
+  'status'    => $_GET['status'] ?? 'all',   // all|pending|overdue|paid
   'month'     => trim($_GET['month'] ?? ''), // YYYY-MM
-  'due_in'    => (int)($_GET['due_in'] ?? 7) // 7|15|30 (só para seção “Vencendo em”)
+  'due_in'    => (int)($_GET['due_in'] ?? 7) // 7|15|30
 ];
 
 function qstr($overrides=[]){
@@ -92,125 +73,35 @@ function month_human($ym, $names){
   return $label.'-'.$y;
 }
 
-// ---------- normalização segura do dataset ----------
-$installmentsRaw = [];
-if ($logged) {
-  $inst = $data['installments'] ?? [];
-  if (is_array($inst)) $installmentsRaw = $inst;
-}
-
-// Caso a API não traga entities, reconstruo a partir das parcelas
-function build_entities_from_installments(array $installments): array {
-  $map = [];
-  foreach ($installments as $i) {
-    $entity = trim((string)($i['entity'] ?? '-'));
-    $course = trim((string)($i['course'] ?? '-'));
-    $amount = (float)($i['amount'] ?? 0);
-    $status = (string)($i['status'] ?? '');
-    $dueIso = $i['due_date'] ?? null;
-
-    if (!isset($map[$entity])) {
-      $map[$entity] = [
-        'name' => $entity,
-        '__acc' => [] // acumulador interno por curso
-      ];
-    }
-    if (!isset($map[$entity]['__acc'][$course])) {
-      $map[$entity]['__acc'][$course] = [
-        'course'   => $course,
-        'value'    => 0.0,
-        'received' => 0.0,
-        'pending'  => 0.0,
-        'range'    => null,
-        'ch'       => '-' ,
-        '__min'    => null,
-        '__max'    => null
-      ];
-    }
-    $acc =& $map[$entity]['__acc'][$course];
-
-    $acc['value'] += $amount;
-    if ($status === 'paid') $acc['received'] += $amount;
-    $acc['pending'] = max(0, $acc['value'] - $acc['received']);
-
-    // range por menor/maior vencimento
-    if ($dueIso) {
-      $ts = strtotime($dueIso);
-      if ($ts) {
-        if ($acc['__min'] === null || $ts < $acc['__min']) $acc['__min'] = $ts;
-        if ($acc['__max'] === null || $ts > $acc['__max']) $acc['__max'] = $ts;
-      }
-    }
-  }
-
-  // Finaliza estrutura (converte __acc em items)
-  $entities = [];
-  foreach ($map as $name => $entry) {
-    $items = [];
-    $total = 0.0;
-    $received = 0.0;
-    foreach ($entry['__acc'] as $c) {
-      if ($c['__min'] !== null && $c['__max'] !== null) {
-        $c['range'] = date('m/y', $c['__min']) . '–' . date('m/y', $c['__max']);
-      }
-      unset($c['__min'], $c['__max']);
-      $items[] = $c;
-      $total += (float)$c['value'];
-      $received += (float)$c['received'];
-    }
-    // ordena cursos por nome
-    usort($items, function($a,$b){
-      return strcmp(mb_strtolower($a['course'],'UTF-8'), mb_strtolower($b['course'],'UTF-8'));
-    });
-    $entities[] = [
-      'name'     => $name,
-      'items'    => $items,
-      'total'    => $total,
-      'received' => $received
-    ];
-  }
-
-  // ordena entidades por nome
-  usort($entities, function($a,$b){
-    return strcmp(mb_strtolower($a['name'],'UTF-8'), mb_strtolower($b['name'],'UTF-8'));
-  });
-
-  return $entities;
-}
-
-// últimos 6 meses (para chips)
+// últimos 6 meses para chips de mês
 $lastMonths = [];
 if ($logged){
   $now = new DateTime('first day of this month');
-  $cursor = (clone $now)->modify('-5 months'); // últimos 6 (inclui o atual)
-  for ($i=0; $i<6; $i++) {
+  $yearStart = new DateTime($now->format('Y').'-01-01');
+  $cursor = clone $now;
+  while ($cursor >= $yearStart && count($lastMonths) < 6){
     $lastMonths[] = $cursor->format('Y-m');
-    $cursor->modify('+1 month');
+    $cursor->modify('-1 month');
   }
+  $lastMonths = array_reverse($lastMonths);
 }
 
-// aplica filtros nas parcelas
+// aplica filtros na lista de parcelas
 $filteredInstallments = [];
 if ($logged){
-  $status = $Q['status'];
-  $month  = $Q['month'];
-  $q      = mb_strtolower($Q['q'],'UTF-8');
-
-  foreach($installmentsRaw as $i){
+  foreach($data['installments'] as $i){
     $ok = true;
-    $st = (string)($i['status'] ?? '');
-    if($status!=='all' && $st!==$status) $ok=false;
-    if($month && substr((string)($i['due_date'] ?? ''),0,7)!==$month) $ok=false;
-
-    if($Q['q']!==''){
-      $hay = mb_strtolower(trim(($i['entity'] ?? '').' '.($i['course'] ?? '')), 'UTF-8');
-      if(!mb_str_contains($hay, $q)) $ok=false;
+    if($Q['status']!=='all' && ($i['status'] ?? '')!==$Q['status']) $ok=false;
+    if($Q['month'] && substr($i['due_date'] ?? '',0,7)!==$Q['month']) $ok=false;
+    if($Q['q']){
+      $hay = mb_strtolower(($i['entity'] ?? '').' '.($i['course'] ?? ''), 'UTF-8');
+      if(!mb_str_contains($hay, mb_strtolower($Q['q'],'UTF-8'))) $ok=false;
     }
     if($ok) $filteredInstallments[] = $i;
   }
 }
 
-// Export CSV (respeita filtros)
+// Export CSV (respeita filtros atuais)
 if ($logged && isset($_GET['export']) && $_GET['export']==='csv') {
   header('Content-Type: text/csv; charset=UTF-8');
   header('Content-Disposition: attachment; filename="parcelas_'.date('Ymd_His').'.csv"');
@@ -230,7 +121,7 @@ if ($logged && isset($_GET['export']) && $_GET['export']==='csv') {
   exit;
 }
 
-// totais (KPIs) com base nos filtrados
+// totais filtrados (para KPIs)
 $totRec=$totRcv=$totOvd=0.0;
 foreach($filteredInstallments as $i){
   $st = $i['status'] ?? '';
@@ -239,102 +130,84 @@ foreach($filteredInstallments as $i){
   if($st==='overdue') $totOvd+=(float)$i['amount'];
 }
 
-// fonte de entidades (API ou reconstruída)
-$entitiesSource = [];
-if ($logged) {
-  $apiEnt = $data['entities'] ?? [];
-  if (is_array($apiEnt) && count($apiEnt) > 0) {
-    $entitiesSource = $apiEnt;
-  } else {
-    // reconstruo a estrutura para não sumir nada
-    $entitiesSource = build_entities_from_installments($installmentsRaw);
-  }
-}
-
-// agrupa para lista visual (ignorando “-”)
+// agrupa por entidade para a lista visual
 $groupFiltered=[];
-if($logged){
-  foreach($entitiesSource as $e){
-    $name = isset($e['name']) ? trim((string)$e['name']) : '';
-    if($name==='-') continue;
+if($logged && !empty($data['entities'])){
+  // DESC: só remove "-" se houver ao menos uma entidade real
+  $hasReal = false;
+  foreach($data['entities'] as $e){
+    if(isset($e['name']) && trim($e['name'])!=='-'){ $hasReal = true; break; }
+  }
 
-    $bucket = [
-      'name'=>$name,
-      'items'=>[],
-      'total'=>(float)($e['total'] ?? 0),
-      'received'=>(float)($e['received'] ?? 0)
-    ];
+  foreach($data['entities'] as $e){
+    if($hasReal && isset($e['name']) && trim($e['name'])==='-') continue; // remove "-" apenas se existir outra entidade
+    $bucket=['name'=>$e['name'] ?? '-', 'items'=>[], 'total'=>0, 'received'=>0];
 
-    $items = $e['items'] ?? [];
-    if (!is_array($items)) $items = [];
-
-    foreach($items as $it){
-      // filtro de busca (q)
-      $matchesQ = $Q['q']
-        ? (mb_stripos(
-            mb_strtolower($name.' '.($it['course'] ?? ''),'UTF-8'),
-            mb_strtolower($Q['q'],'UTF-8'))!==false)
-        : true;
+    foreach($e['items'] as $it){
+      $matchesQ = $Q['q'] ? (mb_stripos(mb_strtolower(($e['name'] ?? '').' '.($it['course'] ?? ''),'UTF-8'), mb_strtolower($Q['q'],'UTF-8'))!==false) : true;
       if(!$matchesQ) continue;
 
-      // quando houver status/mês, exibe curso só se existir parcela correspondente no filtro
+      // quando há filtro por status/mês, exibe apenas se existir parcela daquele curso nesse filtro
       if($Q['status']!=='all' || $Q['month']){
         $exists=false;
         foreach($filteredInstallments as $pi){
-          if(($pi['entity']??'')===$name && ($pi['course']??'')===($it['course']??'')){ $exists=true; break; }
+          if(($pi['entity']??'')===$e['name'] && ($pi['course']??'')===($it['course']??'')){ $exists=true; break; }
         }
         if(!$exists) continue;
       }
 
       $bucket['items'][]=$it;
-
-      // se API não informou total/received, calculo por itens
-      if (!isset($e['total']) || !isset($e['received'])) {
-        $cv = (float)($it['value'] ?? 0);
-        $cr = (float)($it['received'] ?? 0);
-        $bucket['total']    += $cv;
-        $bucket['received'] += $cr;
-      }
+      $bucket['total']+=(float)($it['value'] ?? 0);
+      $bucket['received']+=(float)($it['received'] ?? 0);
     }
-
     if($bucket['items']) $groupFiltered[]=$bucket;
   }
 }
 
-$FIRST_GROUPS = 9999; // sempre mostrar tudo aberto
+$FIRST_GROUPS = 9999; // mostra tudo aberto
 $visibleGroups = $groupFiltered;
 $hiddenGroups  = [];
 
+// flag de filtro aplicado
 $hasFilter = ($Q['status']!=='all' || $Q['month']!=='' || $Q['q']!=='');
 
-// ------------------------------------------------ HTML
-?><!doctype html>
+?>
+<!doctype html>
 <html lang="pt-br" class="theme-dark">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-
   <title><?= htmlspecialchars($cfg['APP_NAME'] ?? 'App', ENT_QUOTES, 'UTF-8') ?></title>
+  <link rel="stylesheet" href="./assets/style.css">
 
-  <!-- BOOT DE TEMA ANTES DO CSS (evita piscar e tema “claro para sempre”) -->
-  <script>
-    (function(){
-      try {
-        var t = localStorage.getItem('julieta:theme') || 'dark';
-        var h = document.documentElement;
-        h.classList.remove('theme-dark','theme-light');
-        h.classList.add('theme-'+t);
-      } catch(e){}
-    })();
-  </script>
+  <!-- HOTFIXES/OVERRIDES (sem tocar no style.css) -->
+  <style>
+    /* 1) sem rolagem horizontal no drawer */
+    .drawer, .drawer__body { overflow-x: hidden !important; }
+    .drawer__panel { width: min(720px, 92vw); max-width: min(720px, 92vw); }
+    .drawer__panel * { max-width: 100%; }
 
-<!-- no <head> -->
-<link rel="stylesheet"
-      href="/assets/style.css?v=<?= @filemtime(__DIR__.'/assets/style.css') ?: time() ?>">
+    /* 2) Agenda 6m responsiva (evita overflow lateral) */
+    .drawer .forecast { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)) !important; }
 
+    /* 3) cursor de clique em tudo que abre subtela */
+    .kpi, .info-line, .js-entity, .js-course, .js-day, .js-due, .chip--toggle { cursor: pointer; }
 
+    /* 4) animação “iOS-like” para o drawer */
+    .drawer{ transition:opacity .28s ease; }
+    .drawer__panel{ transform:translateX(60px) scale(.98); opacity:.98; }
+    .drawer--open .drawer__panel{
+      animation:ios-in .32s cubic-bezier(.22,.8,.16,1) both;
+    }
+    @keyframes ios-in{
+      0%{ transform:translateX(60px) scale(.98); opacity:.0; }
+      60%{ transform:translateX(0) scale(1.005); opacity:1; }
+      100%{ transform:translateX(0) scale(1); opacity:1; }
+    }
+  </style>
 </head>
 <body class="bgfx theme-dark">
+
 <?php if(!$logged): ?>
   <!-- LOGIN -->
   <div class="container" style="display:flex;min-height:100vh;align-items:center;justify-content:center">
@@ -380,22 +253,13 @@ $hasFilter = ($Q['status']!=='all' || $Q['month']!=='' || $Q['q']!=='');
           <input type="hidden" name="action" value="sync">
           <button class="btn btn--primary hero__btn" title="Última sincronização: <?= htmlspecialchars($ultimaSync, ENT_QUOTES, 'UTF-8') ?>">Sincronizar agora</button>
         </form>
-        <form method="post" class="hero__form">
-          <input type="hidden" name="action" value="logout">
-          <button class="btn btn--danger hero__btn">Sair</button>
-        </form>
       </div>
     </div>
 
-    <?php if (isset($_GET['synced']) && $_GET['synced']=='1'): ?>
-      <div class="alert" style="margin:-18px 0 18px">Sincronizado com sucesso (<?= htmlspecialchars($ultimaSync, ENT_QUOTES, 'UTF-8') ?>).</div>
-    <?php endif; ?>
-
+    <!-- KPIs -->
     <?php
       $receivable = (float)$totRec;  $received=(float)$totRcv;  $overdue=(float)$totOvd;
-      $base=max(1,$receivable+$received);
-      $pctRec=min(100,round($receivable/$base*100));
-      $pctRcvd=min(100,round($received/$base*100));
+      $base=max(1,$receivable+$received); $pctRec=min(100,round($receivable/$base*100)); $pctRcvd=min(100,round($received/$base*100));
       $pctOvd=$base>0?min(100,round($overdue/$base*100)):0;
     ?>
     <div class="grid kpis">
@@ -478,13 +342,9 @@ $hasFilter = ($Q['status']!=='all' || $Q['month']!=='' || $Q['q']!=='');
       </div>
     </div>
 
-    <?php if ($logged && empty($groupFiltered)): ?>
-      <div class="alert">Nenhuma entidade para os filtros atuais. Tente “Status: Todos” e “Mês: Todos”.</div>
-    <?php endif; ?>
-
     <!-- FILTERS -->
     <div class="filters filters--list">
-      <!-- STATUS -->
+      <!-- STATUS simples -->
       <div class="filters__group">
         <span class="filters__label">Status</span>
         <div class="chips-line">
@@ -602,7 +462,7 @@ $hasFilter = ($Q['status']!=='all' || $Q['month']!=='' || $Q['q']!=='');
       </div>
 
     <?php else: ?>
-      <!-- LISTA (accordion) -->
+      <!-- LISTA (accordion por entidade – ABERTO) -->
       <div class="acc list">
         <?php foreach($visibleGroups as $e): ?>
           <?php
@@ -640,6 +500,7 @@ $hasFilter = ($Q['status']!=='all' || $Q['month']!=='' || $Q['q']!=='');
                 ]);
                 $tip = htmlspecialchars(implode(' - ', $tipParts), ENT_QUOTES, 'UTF-8');
 
+                // chips de status/mês (do filtro atual) à direita
                 $chips = [];
                 if ($Q['status']!=='all') $chips[] = strtoupper($Q['status']);
                 if ($Q['month']!=='')     $chips[] = month_human($Q['month'],$MONTH_NAMES);
@@ -729,7 +590,7 @@ $hasFilter = ($Q['status']!=='all' || $Q['month']!=='' || $Q['q']!=='');
   </div>
 
   <!-- datasets -->
-  <script id="dataset" type="application/json"><?= json_encode(['all'=>$installmentsRaw], JSON_UNESCAPED_UNICODE) ?></script>
+  <script id="dataset" type="application/json"><?= json_encode(['all'=>$data['installments'] ?? []], JSON_UNESCAPED_UNICODE) ?></script>
   <script id="entitiesDataset" type="application/json"><?= json_encode($groupFiltered, JSON_UNESCAPED_UNICODE) ?></script>
   <script id="filteredInstallments" type="application/json"><?= json_encode($filteredInstallments, JSON_UNESCAPED_UNICODE) ?></script>
 
@@ -759,11 +620,6 @@ $hasFilter = ($Q['status']!=='all' || $Q['month']!=='' || $Q['q']!=='');
   if(!Array.isArray(datasetAll)) datasetAll=[];
   if(!Array.isArray(filteredInstallments)) filteredInstallments=[];
   if(!Array.isArray(entityDataset)) entityDataset=[];
-
-  // fallback: se datasetAll vazia mas já temos filtrados, usa filtrados como base
-  if(datasetAll.length===0 && filteredInstallments.length>0){
-    datasetAll = filteredInstallments.slice();
-  }
 
   entityDataset.forEach(function(ent){
     if(ent && ent.name && !entityMap[ent.name]){
@@ -800,9 +656,11 @@ $hasFilter = ($Q['status']!=='all' || $Q['month']!=='' || $Q['q']!=='');
     return { entityName: entityName, courseName: courseName, course: courseInfo, installments: rel };
   }
 
-  // tema
+  // === Tema persistente ===
   function setTheme(t){
     if(!t) t='dark';
+    // MIGRA: só aceita 'dark' ou 'light'
+    if(t!=='dark' && t!=='light'){ t='dark'; try{ localStorage.setItem('julieta:theme','dark'); }catch(e){} }
     ['theme-dark','theme-light'].forEach(function(c){ root.classList.remove(c); body.classList.remove(c); });
     var cn = 'theme-'+t;
     root.classList.add(cn); body.classList.add(cn);
@@ -820,12 +678,11 @@ $hasFilter = ($Q['status']!=='all' || $Q['month']!=='' || $Q['q']!=='');
     if(hueNow) hueNow.style.background='hsl('+h+' 85% 55%)';
   }
   try{ setTheme((localStorage.getItem('julieta:theme')||'dark')); }catch(e){ setTheme('dark'); }
-  try{ setHue((localStorage.getItem('julieta:hue')||'145')); }catch(e){ setHue('145'); }
-
-  // conecta radios de tema (fix: agora troca na hora e persiste)
-  Array.prototype.forEach.call(document.querySelectorAll('input[name="theme"]'), function(inp){
-    inp.addEventListener('change', function(e){ setTheme(e.target.value); });
-  });
+  try{
+    var storedHue = localStorage.getItem('julieta:hue');
+    if(!storedHue || isNaN(+storedHue)) storedHue='145';
+    setHue(storedHue);
+  }catch(e){ setHue('145'); }
 
   // modal simples (config)
   var modal=document.getElementById('modal');
@@ -847,7 +704,7 @@ $hasFilter = ($Q['status']!=='all' || $Q['month']!=='' || $Q['q']!=='');
   window.addEventListener('scroll', onScroll); onScroll();
   if(back){ back.addEventListener('click', function(){ window.scrollTo({top:0,behavior:'smooth'}); }); }
 
-  // === Drawer (com subtelas) ===
+  // === Drawer (modal com subtelas) ===
   var drawer=document.getElementById('drawer'),
       dClose=document.getElementById('drawerClose'),
       dBack=document.getElementById('drawerBack'),
@@ -856,7 +713,7 @@ $hasFilter = ($Q['status']!=='all' || $Q['month']!=='' || $Q['q']!=='');
   if(dClose) dClose.addEventListener('click', closeDrawer);
   if(drawer){ drawer.addEventListener('click', function(e){ if(e.target===drawer) closeDrawer(); }); }
 
-  var navStack = []; // pilha
+  var navStack = []; // pilha de telas
   var currentState = null;
 
   if(dBack) dBack.addEventListener('click', function(){
@@ -870,8 +727,7 @@ $hasFilter = ($Q['status']!=='all' || $Q['month']!=='' || $Q['q']!=='');
       drawer.classList.remove('drawer--open');
       drawer.classList.remove('drawer--full');
       body.classList.remove('no-scroll');
-      navStack = [];
-      currentState = null;
+      navStack = []; currentState = null;
       if(dBack) dBack.style.display='none';
     }
   }
@@ -879,11 +735,12 @@ $hasFilter = ($Q['status']!=='all' || $Q['month']!=='' || $Q['q']!=='');
   function openDrawer(title, items, kind, opts){
     if(!drawer || !dBody || !dTitle) return;
 
-    if(opts && opts.push && currentState){
-      navStack.push(currentState);
-    }
+    // empilha estado atual se navegando para dentro
+    if(opts && opts.push && currentState){ navStack.push(currentState); }
+    // controla visibilidade do botão Voltar
     if(dBack) dBack.style.display = navStack.length ? 'inline-flex' : 'none';
 
+    // helpers
     function parseBRL(v){
       if(typeof v==='number') return v;
       if(v==null) return 0;
@@ -917,6 +774,7 @@ $hasFilter = ($Q['status']!=='all' || $Q['month']!=='' || $Q['q']!=='');
       return parts.join('\n');
     }
 
+    // normaliza itens
     var norm = (items||[]).map(function(i){
       return {
         entity: i.entity||'-',
@@ -928,6 +786,7 @@ $hasFilter = ($Q['status']!=='all' || $Q['month']!=='' || $Q['q']!=='');
       };
     });
 
+    // agregações
     var total=0, byEntity={}, byMonth={};
     norm.forEach(function(i){
       var amount=i.amount||0; total += amount;
@@ -953,6 +812,7 @@ $hasFilter = ($Q['status']!=='all' || $Q['month']!=='' || $Q['q']!=='');
         '</header>'+
       '</div>';
 
+    // estado global de faixas de prazo (só em "pending")
     var ranges = [
       {key:'r0_7',  label:'0–7d',   test:function(d,st){ return st!=='paid' && d>=0 && d<=7; }},
       {key:'r8_15', label:'8–15d',  test:function(d,st){ return st!=='paid' && d>=8 && d<=15; }},
@@ -972,6 +832,7 @@ $hasFilter = ($Q['status']!=='all' || $Q['month']!=='' || $Q['q']!=='');
     var dynamicHtml='';
 
     if(kind==='entity'){
+      // detalhe da entidade
       var detail = items || {};
       var ent = detail.entity || null;
       var name = detail.name || title;
@@ -1001,6 +862,7 @@ $hasFilter = ($Q['status']!=='all' || $Q['month']!=='' || $Q['q']!=='');
         ? '<div class="drawer__section"><header class="drawer__section-head"><h4>Cursos</h4><span class="micro">Clique para ver detalhes</span></header><div class="drawer__list">'+courseLines+'</div></div>'
         : '<div class="drawer__section"><div class="alert">Nenhum curso disponível.</div></div>';
 
+      // timeline de parcelas da entidade
       var relInst = Array.isArray(detail.installments) ? detail.installments.slice() : [];
       relInst.sort(function(a,b){
         var da=safeDate(a.due_date), db=safeDate(b.due_date);
@@ -1021,6 +883,7 @@ $hasFilter = ($Q['status']!=='all' || $Q['month']!=='' || $Q['q']!=='');
       dBody.innerHTML = sumHtml + coursesHtml + timelineHtml;
 
     } else if(kind==='course'){
+      // detalhe do curso
       var detail = items || {};
       var course = detail.course || null;
       var entityName = detail.entityName || "";
@@ -1059,6 +922,7 @@ $hasFilter = ($Q['status']!=='all' || $Q['month']!=='' || $Q['q']!=='');
       dBody.innerHTML = sumHtml + installmentsHtml;
 
     } else if(kind==='month'){
+      // lista do mês
       var byDay = {};
       norm.forEach(function(i){
         var d = safeDate(i.due_date), key = d ? d.toISOString().slice(0,10) : 'sem-data';
@@ -1074,6 +938,7 @@ $hasFilter = ($Q['status']!=='all' || $Q['month']!=='' || $Q['q']!=='');
       dBody.innerHTML = summaryHtml + monthHtml;
 
     } else if(kind==='day'){
+      // lista do dia
       var dayItems = norm.slice().sort(function(a,b){
         var da=safeDate(a.due_date), db=safeDate(b.due_date);
         if(da && db) return da - db;
@@ -1091,6 +956,7 @@ $hasFilter = ($Q['status']!=='all' || $Q['month']!=='' || $Q['q']!=='');
       dBody.innerHTML = summaryHtml + listHtml;
 
     } else if(kind==='overdue'){
+      // vencidos (top atrasos)
       var ranked=normFiltered.filter(function(i){return i.status==='overdue';})
                       .sort(function(a,b){return daysDiff(a.due_date)-daysDiff(b.due_date);});
       var insights=ranked.slice(0,20).map(function(i){
@@ -1101,7 +967,8 @@ $hasFilter = ($Q['status']!=='all' || $Q['month']!=='' || $Q['q']!=='');
       dBody.innerHTML = summaryHtml + dynamicHtml;
 
     } else {
-      // A RECEBER
+      // A RECEBER (pendentes + futuros): entidades, agenda 6m e próximas datas
+      // chips de prazo
       var chipsHtml = '<div class="drawer__section"><header class="drawer__section-head">'+
         '<h4>Prazo de recebimento</h4><span class="micro">Filtra pela distância do vencimento</span></header>'+
         '<div class="chips-line">'+
@@ -1109,7 +976,7 @@ $hasFilter = ($Q['status']!=='all' || $Q['month']!=='' || $Q['q']!=='');
         (window.__dueActive ? '<button type="button" class="chip js-due-clear">Limpar</button>' : '')+
         '</div></div>';
 
-      // entidades
+      // entidades (consolidado)
       var listEntities = Object.keys(byEntity).sort(function(a,b){ return a.localeCompare(b,'pt-BR'); }).map(function(name){
         var ent = byEntity[name];
         var courses = Object.keys(ent.courses).map(function(courseName){
@@ -1140,7 +1007,7 @@ $hasFilter = ($Q['status']!=='all' || $Q['month']!=='' || $Q['q']!=='');
         ? '<div class="drawer__section"><header class="drawer__section-head"><h4>Entidades</h4><span class="micro">Visão geral consolidada</span></header><div class="drawer__list">'+listEntities+'</div></div>'
         : '<div class="drawer__section"><div class="alert">Nenhuma entidade com valores a receber.</div></div>';
 
-      // agenda 6 meses
+      // agenda 6 meses (pagos excluídos)
       var monthsSorted=Object.keys(byMonth).filter(function(k){return k!=='sem-data';}).sort().slice(0,6).map(function(ym){return [ym,byMonth[ym]];});
       var forecastNote = '<div class="micro">Visão dos próximos 6 meses somando títulos <strong>A Receber</strong> e <strong>Vencidos</strong> por mês (pagos excluídos).</div>';
       var forecastHtml = monthsSorted.length
@@ -1157,7 +1024,7 @@ $hasFilter = ($Q['status']!=='all' || $Q['month']!=='' || $Q['q']!=='');
             + '</div></div>')
         : '';
 
-      // próximas datas
+      // próximas datas (primeiros 30)
       var upcoming = normFiltered.filter(function(i){ return i.status!=='paid'; })
                          .sort(function(a,b){
                            var da = safeDate(a.due_date), db=safeDate(b.due_date);
@@ -1180,7 +1047,7 @@ $hasFilter = ($Q['status']!=='all' || $Q['month']!=='' || $Q['q']!=='');
 
       dBody.innerHTML = summaryHtml + chipsHtml + entitiesHtml + forecastHtml + upcomingHtml;
 
-      // chips de prazo
+      // bind chips de prazo
       Array.prototype.forEach.call(dBody.querySelectorAll('.js-due'), function(b){
         b.addEventListener('click', function(){
           window.__dueActive = String(b.getAttribute('data-range')||'');
@@ -1193,7 +1060,7 @@ $hasFilter = ($Q['status']!=='all' || $Q['month']!=='' || $Q['q']!=='');
         openDrawer(currentState.title, currentState.items, currentState.kind, {restore:true});
       });
 
-      // clique no mês
+      // clique no mês → detalhar
       Array.prototype.forEach.call(dBody.querySelectorAll('.forecast__item'), function(el){
         el.addEventListener('click', function(){
           var ym = el.getAttribute('data-ym') || '';
@@ -1204,7 +1071,7 @@ $hasFilter = ($Q['status']!=='all' || $Q['month']!=='' || $Q['q']!=='');
         });
       });
 
-      // clique na data
+      // clique na data → cursos do dia
       Array.prototype.forEach.call(dBody.querySelectorAll('.js-day'), function(el){
         el.addEventListener('click', function(){
           var day = el.getAttribute('data-day') || '';
@@ -1222,11 +1089,13 @@ $hasFilter = ($Q['status']!=='all' || $Q['month']!=='' || $Q['q']!=='');
     }
     drawer.classList.add('drawer--full');
 
+    // estado atual
     currentState = { title: title, items: items, kind: kind||'pending' };
   }
 
   // Abridores (KPIs + entidades/curso da lista)
   function bindOpeners(){
+    // KPIs usam SEMPRE os itens filtrados
     var kpies = document.querySelectorAll('.kpi[data-open]');
     for(var i=0;i<kpies.length;i++){
       var el = kpies[i];
@@ -1243,6 +1112,7 @@ $hasFilter = ($Q['status']!=='all' || $Q['month']!=='' || $Q['q']!=='');
       el.addEventListener('keydown', function(e){ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); handle(this.getAttribute('data-open')); } });
     }
 
+    // entidade/curso (cards/lista)
     document.addEventListener('click', function (e) {
       var elEnt = e.target.closest('.entity-action.js-entity, .card.js-entity, .info-line.js-entity, .entity.js-entity');
       if (elEnt) {
