@@ -232,6 +232,78 @@ function map_row($r){
   ];
 }
 
+/**
+ * Normaliza valores financeiros garantindo coerência entre total, recebido e pendente.
+ */
+function normalize_dataset(array $data): array{
+  $totalReceivable = 0.0;
+  $totalReceived   = 0.0;
+
+  if(isset($data['entities']) && is_array($data['entities'])){
+    foreach($data['entities'] as &$entity){
+      $entityTotal    = 0.0;
+      $entityReceived = 0.0;
+
+      if(isset($entity['items']) && is_array($entity['items'])){
+        foreach($entity['items'] as &$item){
+          $value    = max(0.0, (float)($item['value'] ?? 0));
+          $received = max(0.0, (float)($item['received'] ?? 0));
+          $pending  = max(0.0, (float)($item['pending'] ?? 0));
+
+          if($value <= 0 && ($received > 0 || $pending > 0)){
+            $value = $received + $pending;
+          }
+          if($value > 0 && $received > $value){
+            $value = $received;
+          }
+          $pending = max(0.0, $value - $received);
+
+          $value    = round($value, 2);
+          $received = round($received, 2);
+          $pending  = round($pending, 2);
+
+          $item['value']    = $value;
+          $item['received'] = $received;
+          $item['pending']  = $pending;
+
+          $entityTotal    += $value;
+          $entityReceived += $received;
+        }
+        unset($item);
+      }
+
+      $entityTotal    = round($entityTotal, 2);
+      $entityReceived = round($entityReceived, 2);
+      $entityPending  = max(0.0, $entityTotal - $entityReceived);
+
+      $entity['total']    = $entityTotal;
+      $entity['received'] = $entityReceived;
+
+      $totalReceivable += $entityPending;
+      $totalReceived   += $entityReceived;
+    }
+    unset($entity);
+  }
+
+  if(!isset($data['kpis']) || !is_array($data['kpis'])){
+    $data['kpis'] = [];
+  }
+  $data['kpis']['receivable'] = round($totalReceivable, 2);
+  $data['kpis']['received']   = round($totalReceived, 2);
+
+  $totalOverdue = 0.0;
+  if(isset($data['installments']) && is_array($data['installments'])){
+    foreach($data['installments'] as $inst){
+      if(($inst['status'] ?? '') === 'overdue'){
+        $totalOverdue += (float)($inst['amount'] ?? 0);
+      }
+    }
+  }
+  $data['kpis']['overdue'] = round($totalOverdue, 2);
+
+  return $data;
+}
+
 /* =========================
    DATASET + CACHE
 ========================= */
@@ -241,7 +313,7 @@ function get_data($forceRefresh=false){
   if(!$forceRefresh && is_file($cacheFile)){
     $j = json_decode(@file_get_contents($cacheFile), true);
     if($j && isset($j['created_at']) && (time() - $j['created_at'] < 60*10)){
-      return $j;
+      return normalize_dataset($j);
     }
   }
 
@@ -291,24 +363,25 @@ function get_data($forceRefresh=false){
     } else {
       $arec = (float)$arec;
     }
+    $pendingNow = max(0.0, $arec);
 
     // KPIs
-    $sumReceivable += $arec;     // A Receber
-    $sumReceived   += $received; // Recebidos
+    $sumReceivable += $pendingNow; // A Receber
+    $sumReceived   += $received;   // Recebidos
 
     // vencido = "a receber" cujo vencimento passou (consultoria não conta)
     $isConsultoria = ($e['classificacao'] === 'consultoria');
     $vencIso       = $isConsultoria ? null : ($e['vencimento'] ?: null);
-    if($arec > 0 && $vencIso && $vencIso < $todayIso){
-      $sumOverdue += $arec;
+    if($pendingNow > 0 && $vencIso && $vencIso < $todayIso){
+      $sumOverdue += $pendingNow;
     }
 
     // parcela "pending" (o que falta receber)
-    if($arec > 0){
+    if($pendingNow > 0){
       $installments[] = [
         'entity'   => $e['entity'] ?: '-',
         'course'   => $e['course'] ?: '-',
-        'amount'   => $arec,
+        'amount'   => round($pendingNow, 2),
         'due_date' => $vencIso, // consultoria -> null
         'status'   => ($vencIso && $vencIso < $todayIso) ? 'overdue' : 'pending',
       ];
@@ -326,15 +399,24 @@ function get_data($forceRefresh=false){
       $range = ($e['date_start'] ? dmy($e['date_start']) : '—').' — '.($e['date_end'] ? dmy($e['date_end']) : '—');
     }
 
+    $totalValue = $hon > 0 ? $hon : ($received + $pendingNow);
+    if($totalValue <= 0 && $received > 0){
+      $totalValue = $received;
+    }
+    if($totalValue > 0 && $received > $totalValue){
+      $totalValue = $received;
+    }
+    $pendingDisplay = max(0.0, $totalValue - $received);
+
     $item = [
       'course'     => $e['course'] ?: '-',
       'ch'         => trim($e['ch']) !== '' ? $e['ch'] : '-',
       'range'      => $range,
       'date_start' => $e['date_start'],           // ISO bruto p/ detalhes
       'date_end'   => $e['date_end'],             // ISO bruto p/ detalhes
-      'value'      => $hon,
-      'received'   => $received,
-      'pending'    => $arec,
+      'value'      => round($totalValue, 2),
+      'received'   => round($received, 2),
+      'pending'    => round($pendingDisplay, 2),
       'vencimento' => $vencIso,                   // pode ser null em Consultoria
       'class'      => $e['classificacao'] ?: '',
       'payments'   => $paymentsUI,
@@ -358,6 +440,8 @@ function get_data($forceRefresh=false){
     'entities'     => $entities,
     'installments' => $installments,
   ];
+
+  $data = normalize_dataset($data);
 
   if(!is_dir(dirname($cacheFile))) @mkdir(dirname($cacheFile), 0777, true);
   @file_put_contents($cacheFile, json_encode($data, JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT));
@@ -398,3 +482,4 @@ function save_settings($in){
   @file_put_contents(_settings_path(), json_encode($s, JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT));
   return $s;
 }
+
