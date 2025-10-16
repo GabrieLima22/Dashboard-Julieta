@@ -317,6 +317,7 @@ a{color:inherit;text-decoration:none}
 .list-item__body{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;flex-wrap:wrap}
 .list-item__course{display:grid;gap:6px}
 .list-item__meta{display:flex;gap:8px;flex-wrap:wrap}
+.list-item__meta .pill{text-transform:uppercase}
 .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.1);color:#fff;font-size:11px;border:1px solid rgba(255,255,255,.14);letter-spacing:.04em;text-transform:uppercase}
 .list-item__title{font-size:15px;color:#fff;letter-spacing:.01em}
 .list-item__values{display:grid;justify-items:end;gap:4px;text-align:right}
