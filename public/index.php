@@ -269,30 +269,7 @@ $pctOvd=$base>0?min(100,round($overdue/$base*100)):0;
 <body class="bgfx theme-dark">
 
 <?php if(!$logged): ?>
-  <!-- LOGIN -->
-  <div class="container" style="display:flex;min-height:100vh;align-items:center;justify-content:center">
-    <div class="card" style="width:420px">
-      <div class="brand" style="margin-bottom:12px">
-        <div class="logo"></div>
-        <div>
-          <div class="title"><?= htmlspecialchars($cfg['APP_NAME'] ?? 'App', ENT_QUOTES, 'UTF-8') ?></div>
-          <div class="badge">acesso restrito</div>
-        </div>
-      </div>
-      <?php if(!empty($error)): ?>
-        <div class="alert" style="border-style:solid;border-color:#7f1d1d;background:#180e0e;color:#fda4a4">
-          <?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?>
-        </div>
-      <?php endif; ?>
-      <form method="post" style="display:flex;flex-direction:column;gap:10px;margin-top:8px" autocomplete="off" novalidate>
-        <input type="hidden" name="action" value="login">
-        <label for="email">E-mail</label><input class="input" id="email" name="email" type="email" required>
-        <label for="password">Senha</label><input class="input" id="password" name="password" type="password" required>
-        <button class="btn btn--primary" style="justify-content:center">Entrar</button>
-      </form>
-    </div>
-  </div>
-
+ 
 <?php else: ?>
   <div class="container">
     <!-- HERO -->
@@ -322,38 +299,41 @@ $pctOvd=$base>0?min(100,round($overdue/$base*100)):0;
         <h4>A Receber<?= $hasFilter ? ' (visão geral)' : '' ?></h4>
         <div class="amount"><?= brl($receivable) ?></div>
         <div class="progress"><div class="bar bar--rec" style="width:<?= $pctRec ?>%"></div></div>
-        <div class="sub">Soma da coluna “Valor a Receber”</div>
+        <div class="sub">Vencidos + A vencer</div>
       </div>
       <div class="card kpi kpi--rcv" data-open="paid" tabindex="0" role="button" aria-label="Abrir detalhes: Recebido" onclick="window.dashboardOpenStatus && window.dashboardOpenStatus('paid')">
         <h4>Recebido<?= $hasFilter ? ' (visão geral)' : '' ?></h4>
         <div class="amount amount--ok"><?= brl($received) ?></div>
         <div class="progress"><div class="bar bar--rcv" style="width:<?= $pctRcvd ?>%"></div></div>
-        <div class="sub">Soma dos Pagamentos 1–6</div>
+        <div class="sub">Total de Honorários + Pró-labore + Repasses</div>
       </div>
       <div class="card kpi kpi--ovd" data-open="overdue" tabindex="0" role="button" aria-label="Abrir detalhes: Vencidos" onclick="window.dashboardOpenStatus && window.dashboardOpenStatus('overdue')">
         <h4>Vencidos<?= $hasFilter ? ' (visão geral)' : '' ?></h4>
         <div class="amount amount--bad"><?= brl($overdue) ?></div>
         <div class="progress"><div class="bar bar--ovd" style="width:<?= $pctOvd ?>%"></div></div>
-        <div class="sub"><span class="chip chip--danger">A receber vencido</span></div>
+        <div class="sub">Curso ministrado há mais de 30 dias — honorários vencidos</span></div>
       </div>
     </div>
 
 
     <!-- Vencendo em X dias -->
-    <div class="section-title">Vencendo em
-      <?php
-        $validDueIn = in_array($Q['due_in'], [7,15,30], true) ? $Q['due_in'] : 7;
-        echo ' '.$validDueIn.' dias';
-      ?>
+    <?php
+      $validDueIn = in_array($Q['due_in'], [7,15,30], true) ? $Q['due_in'] : 7;
+    ?>
+    <div class="section-title section-title--row">
+      <span>Vencendo em <?= $validDueIn ?> dias</span>
     </div>
-    <div class="card" style="margin-bottom:14px">
-      <div class="chips" style="margin-bottom:12px">
-        <?php foreach([7,15,30] as $di):
-          $active = $validDueIn===$di ? 'is-active' : '';
-          $href = '?'.qstr(['due_in'=>$di]);
-        ?>
-          <a class="chip chip--toggle <?= $active ?>" href="<?= $href ?>"><?= $di ?> dias</a>
-        <?php endforeach; ?>
+    <div class="card card--filter-panel">
+      <div class="filters__group filters__group--standalone">
+        <span class="filters__label">Prazo</span>
+        <div class="chips-line">
+          <?php foreach([7,15,30] as $di):
+            $active = $validDueIn===$di ? 'is-active' : '';
+            $href = '?'.qstr(['due_in'=>$di]);
+          ?>
+            <a class="chip chip--toggle <?= $active ?>" href="<?= $href ?>"><?= $di ?> dias</a>
+          <?php endforeach; ?>
+        </div>
       </div>
       <?php
         $limitDate = strtotime('+'.$validDueIn.' days', strtotime('today'));
@@ -386,16 +366,19 @@ $pctOvd=$base>0?min(100,round($overdue/$base*100)):0;
 
 
     <!-- LISTA DE ENTIDADES -->
-    <div class="section-title" style="display:flex;align-items:center;gap:12px">
+    <div class="section-title section-title--row">
       <span>Entidades <?= $hasFilter ? '<small class="chip">filtrado</small>' : '' ?></span>
-      <div class="chips">
-        <?php
-          $tabs = ['list'=>'Lista','grid'=>'Grade','carousel'=>'Carrossel'];
-          foreach($tabs as $k=>$lbl):
-            $active = $view===$k ? 'is-active' : '';
-        ?>
-          <a class="chip chip--toggle <?= $active ?>" href="?<?= qstr(['view'=>$k]) ?>"><?= $lbl ?></a>
-        <?php endforeach; ?>
+      <div class="filters__group filters__group--inline">
+        <span class="filters__label">Exibição</span>
+        <div class="chips-line">
+          <?php
+            $tabs = ['list'=>'Lista','grid'=>'Grade','carousel'=>'Carrossel'];
+            foreach($tabs as $k=>$lbl):
+              $active = $view===$k ? 'is-active' : '';
+          ?>
+            <a class="chip chip--toggle <?= $active ?>" href="?<?= qstr(['view'=>$k]) ?>"><?= $lbl ?></a>
+          <?php endforeach; ?>
+        </div>
       </div>
     </div>
 
@@ -489,12 +472,12 @@ $pctOvd=$base>0?min(100,round($overdue/$base*100)):0;
                 <div class="list-item__course">
                   <div class="list-item__meta">
                     <?php if (!empty($it['date_start'])): ?>
-                      <span class="pill">dataInicio: <?= dmy($it['date_start']) ?></span>
+                      <span class="pill">data Início: <?= dmy($it['date_start']) ?></span>
                     <?php endif; ?>
                     <?php if (!empty($it['date_end'])): ?>
-                      <span class="pill">dataFim: <?= dmy($it['date_end']) ?></span>
+                      <span class="pill">data Fim: <?= dmy($it['date_end']) ?></span>
                     <?php endif; ?>
-                    <span class="pill">CH <?= htmlspecialchars($it['ch'] ?? '-', ENT_QUOTES, 'UTF-8') ?></span>
+                    <span class="pill">Carga Horária: <?= htmlspecialchars($it['ch'] ?? '-', ENT_QUOTES, 'UTF-8') ?></span>
                   </div>
                 </div>
                 <div class="list-item__values">
@@ -609,7 +592,7 @@ $pctOvd=$base>0?min(100,round($overdue/$base*100)):0;
     <span class="pill">Data fim: <?= dmy($it['date_end']) ?></span>
   <?php endif; ?>
 
-  <span class="pill">CH <?= htmlspecialchars($it['ch'] ?? '-', ENT_QUOTES, 'UTF-8') ?></span>
+  <span class="pill">Carga Horária: <?= htmlspecialchars($it['ch'] ?? '-', ENT_QUOTES, 'UTF-8') ?></span>
 </div>
 
                       <strong class="list-item__title"><?= htmlspecialchars($it['course'] ?? '-', ENT_QUOTES, 'UTF-8') ?></strong>
@@ -1088,4 +1071,16 @@ $pctOvd=$base>0?min(100,round($overdue/$base*100)):0;
 
 
 
-
+<style>
+.progress .bar {
+  background: linear-gradient(90deg, #22d3ee, #06b6d4) !important;
+  height: 6px !important;
+  opacity: 1 !important;
+  display: block !important;
+}
+.progress {
+  background: rgba(30,41,59,0.4) !important;
+  min-height: 6px !important;
+  overflow: visible !important;
+}
+</style>
