@@ -7,6 +7,7 @@ return [
   'ADMIN_EMAIL'     => 'admin@jml.local',
   'ADMIN_PASS_HASH' => '$2y$10$sScGiHVTh.lC/4xiZdpIt.VbQXC18DNdL.hnwxD9Hqckm.KAvlX02',
 
-  'APP_NAME'        => 'Honorários Julieta',
+  'APP_NAME'        => 'RECEBIMENTOS JULIETA',
 ];
+
 
