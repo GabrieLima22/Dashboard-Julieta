@@ -233,7 +233,7 @@ $pctOvd=$base>0?min(100,round($overdue/$base*100)):0;
 
 ?>
 <!doctype html>
-<html lang="pt-br" class="theme-dark">
+<html lang="pt-br" class="theme-light">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -258,15 +258,45 @@ $pctOvd=$base>0?min(100,round($overdue/$base*100)):0;
     .drawer__panel{ transform:translateX(60px) scale(.98); opacity:.98; }
     .drawer--open .drawer__panel{
       animation:ios-in .32s cubic-bezier(.22,.8,.16,1) both;
+
     }
+.progress .bar {
+  background: linear-gradient(90deg, #22d3ee, #06b6d4) !important;
+  height: 6px !important;
+  opacity: 1 !important;
+  display: block !important;
+}
+.progress {
+  background: rgba(30,41,59,0.4) !important;
+  min-height: 6px !important;
+  overflow: visible !important;
+}/* 1) Traga os blobs para cima do background do body */
+body.bgfx::before,
+body.bgfx::after{
+  z-index: 0 !important;   /* em vez de -2 */
+}
+
+/* 2) Garanta que o conteúdo fique acima dos blobs */
+body > *{
+  position: relative; 
+  z-index: 1;
+}
+
+/* (opcional) se quiser manter a “camada” dos blobs isolada */
+body.bgfx{ position: relative; z-index: 0; }
+
+    
     @keyframes ios-in{
       0%{ transform:translateX(60px) scale(.98); opacity:.0; }
       60%{ transform:translateX(0) scale(1.005); opacity:1; }
       100%{ transform:translateX(0) scale(1); opacity:1; }
+      
     }
   </style>
+  
 </head>
-<body class="bgfx theme-dark">
+  <body class="theme-light bgfx">
+
 
 <?php if(!$logged): ?>
  
@@ -802,6 +832,23 @@ $pctOvd=$base>0?min(100,round($overdue/$base*100)):0;
 
   var navStack = []; // pilha de telas
   var currentState = null;
+  var drawerClosingTimer = null;
+
+  function refreshNavControls(){
+    if(dBack) dBack.style.display = navStack.length ? 'inline-flex' : 'none';
+    if(dClose) dClose.style.display = navStack.length ? 'none' : 'inline-flex';
+    if(drawer) drawer.classList.toggle('drawer--nested', navStack.length > 0);
+  }
+
+  function animateDrawer(direction){
+    if(!dBody) return;
+    dBody.classList.remove('drawer-anim-forward', 'drawer-anim-back', 'drawer-anim-root');
+    void dBody.offsetWidth;
+    var cls = 'drawer-anim-root';
+    if(direction === 'forward') cls = 'drawer-anim-forward';
+    else if(direction === 'back') cls = 'drawer-anim-back';
+    dBody.classList.add(cls);
+  }
 
   if(dBack) dBack.addEventListener('click', function(){
     var prev = navStack.pop();
@@ -810,22 +857,35 @@ $pctOvd=$base>0?min(100,round($overdue/$base*100)):0;
 
   function closeDrawer(){
     if(!drawer) return;
+    if(drawerClosingTimer){ clearTimeout(drawerClosingTimer); drawerClosingTimer = null; }
     if(drawer.classList.contains('drawer--open')){
-      drawer.classList.remove('drawer--open');
+      drawer.classList.add('drawer--closing');
       drawer.classList.remove('drawer--full');
       body.classList.remove('no-scroll');
       navStack = []; currentState = null;
-      if(dBack) dBack.style.display='none';
+      refreshNavControls();
+      drawerClosingTimer = setTimeout(function(){
+        drawer.classList.remove('drawer--open','drawer--closing','drawer--nested');
+        refreshNavControls();
+        drawerClosingTimer = null;
+      }, 260);
     }
   }
 
   function openDrawer(title, items, kind, opts){
     if(!drawer || !dBody || !dTitle) return;
+    var direction = 'root';
+    if(drawerClosingTimer){ clearTimeout(drawerClosingTimer); drawerClosingTimer = null; }
+    drawer.classList.remove('drawer--closing');
 
     // empilha estado atual se navegando para dentro
-    if(opts && opts.push && currentState){ navStack.push(currentState); }
-    // visibilidade do botão Voltar
-    if(dBack) dBack.style.display = navStack.length ? 'inline-flex' : 'none';
+    if(opts && opts.push && currentState){
+      navStack.push(currentState);
+      direction = 'forward';
+    } else if(opts && opts.restore){
+      direction = 'back';
+    }
+    refreshNavControls();
 
     // helpers
     function parseBRL(v){
@@ -846,8 +906,12 @@ $pctOvd=$base>0?min(100,round($overdue/$base*100)):0;
     function esc(str){ str = str === null ? '' : String(str); return str.replace(/[&<>"']/g,function(ch){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]||ch; }); }
     function escAttr(str){ return esc(str).replace(/\n/g,'&#10;'); }
 
-    // normaliza itens
-    var norm = (items||[]).map(function(i){
+    // normaliza lista base (array direto ou installments aninhados em objetos)
+    var listSource = Array.isArray(items)
+      ? items
+      : (items && Array.isArray(items.installments) ? items.installments : []);
+
+    var norm = listSource.map(function(i){
       return {
         entity: i.entity||'-',
         course: i.course||'',
@@ -931,59 +995,178 @@ $pctOvd=$base>0?min(100,round($overdue/$base*100)):0;
         : '';
 
       dBody.innerHTML = sumHtml + coursesHtml + timelineHtml;
+      // abre o drawer e atualiza estado (igual ao branch de pending/paid/overdue)
+animateDrawer('forward'); // animação do drawer
+if (!drawer.classList.contains('drawer--open')) {
+  drawer.classList.add('drawer--open');
+}
+body.classList.add('no-scroll');
+drawer.classList.add('drawer--full');
 
-    } else if(kind==='course'){
-      // detalhe do curso
-      var detail = items || {};
-      var course = detail.course || null;
-      var entityName = detail.entityName || "";
-      var courseName = detail.courseName || title;
-      var totalC = course && typeof course.value === "number" ? course.value : 0;
-      var receivedC = course && typeof course.received === "number" ? course.received : 0;
-      var pendingC = Math.max(0, totalC - receivedC);
+currentState = { title: title, items: items, kind: kind || 'entity' }; // mantém o estado
+refreshNavControls(); // atualiza controles de navegação
 
-      var sumHtml =
-        '<div class="drawer__section">'+
-          '<header class="drawer__section-head">'+
-            '<div><span class="micro">Recebido</span><div class="drawer__number">'+formatBRL(receivedC)+'</div></div>'+
-            '<div><span class="micro">Falta</span><div class="drawer__number">'+formatBRL(pendingC)+'</div></div>'+
-            '<div><span class="micro">Total</span><div class="drawer__number">'+formatBRL(totalC)+'</div></div>'+
-          '</header>'+
-          '<div class="micro">'+esc(entityName)+' · '+esc(courseName)+'</div>'+
-        '</div>';
 
-      var relInst = Array.isArray(detail.installments) ? detail.installments.slice() : [];
-      relInst.sort(function(a,b){
-        var da=safeDate(a.due_date), db=safeDate(b.due_date);
-        if(da && db) return da - db;
-        if(da && !db) return -1;
-        if(!da && db) return 1;
-        return (a.amount||0) - (b.amount||0);
+   } else if (kind==='course') {
+  var detail = items || {};
+  var course = detail.course || null;
+  var entityName = detail.entityName || "";
+  var courseName = detail.courseName || title;
+
+  var totalC    = course && typeof course.value === "number"    ? course.value    : 0;
+  var receivedC = course && typeof course.received === "number" ? course.received : 0;
+  var pendingC  = Math.max(0, totalC - receivedC);
+
+  // meta (datas, ch e classificação se vier)
+  var ch     = course && course.ch ? String(course.ch) : (detail.ch || '-');
+  var dIni   = course && course.date_start ? course.date_start : (detail.date_start || null);
+  var dFim   = course && course.date_end   ? course.date_end   : (detail.date_end   || null);
+  var classi = (course && course.class) || (detail.class) || '';
+
+  function metaPill(label, value){
+    if(!value || value === '-') return '';
+    return '<span class="pill">'+label+': '+esc(value)+'</span>';
+  }
+  function dmyLocal(iso){
+    if(!iso) return '—';
+    var d = new Date(iso); return isNaN(d.getTime()) ? '—' : d.toLocaleDateString('pt-BR');
+  }
+
+  var subtitleClass = 'micro course-subtitle';
+  if ((courseName || '').length > 48) {
+    subtitleClass += ' course-subtitle--long';
+  }
+
+  var header =
+    '<div class="drawer__section">'+
+      '<header class="drawer__section-head">'+
+        '<div>'+
+          '<span class="micro">Recebido</span>'+
+          '<div class="drawer__number">'+formatBRL(receivedC)+'</div>'+
+        '</div>'+
+        '<div>'+
+          '<span class="micro">Falta</span>'+
+          '<div class="drawer__number">'+formatBRL(pendingC)+'</div>'+
+        '</div>'+
+        '<div>'+
+          '<span class="micro">Total</span>'+
+          '<div class="drawer__number">'+formatBRL(totalC)+'</div>'+
+        '</div>'+
+      '</header>'+
+      '<div class="chips">'+
+        metaPill('Entidade', entityName)+
+        metaPill('Carga Horária', ch)+
+        metaPill('Início', dmyLocal(dIni))+
+        metaPill('Fim', dmyLocal(dFim))+
+        (classi ? '<span class="pill">'+esc(classi.toUpperCase())+'</span>' : '')+
+      '</div>'+
+      '<div class="'+subtitleClass+'">'+esc(entityName)+' &mdash; '+esc(courseName)+'</div>'+
+    '</div>';
+
+  // extrato (parcelas relacionadas)
+  var relInst = Array.isArray(detail.installments) ? detail.installments.slice() : [];
+  relInst.sort(function(a,b){
+    var da=a.due_date?new Date(a.due_date).getTime():0;
+    var db=b.due_date?new Date(b.due_date).getTime():0;
+    return (db-da) || ((b.amount||0)-(a.amount||0)); // recente primeiro
+  });
+
+  var lines = relInst.map(function(item){
+    var when   = item.due_date ? new Date(item.due_date).toLocaleDateString('pt-BR') : '-';
+    var status = String(item.status||'').toUpperCase();
+    var chip   = '';
+    // se vierem inst_no/inst_total, mostra a “bolacha” da parcela
+    if (typeof item.inst_no === 'number') {
+      chip = '<span class="chip" style="margin-left:8px">'+
+               (item.inst_total ? (item.inst_no+'/'+item.inst_total) : (item.inst_no+'ª parcela'))+
+             '</span>';
+    }
+    return '<div class="info-line">'+
+             '<div><strong>'+when+'</strong><span>'+esc(status)+' — '+esc(courseName)+'</span>'+chip+'</div>'+
+             '<span class="tag">'+formatBRL(item.amount)+'</span>'+
+           '</div>';
+  }).join('');
+
+  var installmentsHtml =
+    '<div class="drawer__section">'+
+      '<header class="drawer__section-head"><h4>Extrato de parcelas</h4></header>'+
+      (lines ? '<div class="drawer__list">'+lines+'</div>' : '<div class="alert">Nenhuma parcela encontrada.</div>')+
+    '</div>';
+
+  dBody.innerHTML = header + installmentsHtml;
+
+// abre o drawer e atualiza estado (igual ao branch de pending/paid/overdue)
+animateDrawer('forward'); // animação do drawer
+if (!drawer.classList.contains('drawer--open')) {
+  drawer.classList.add('drawer--open');
+}
+body.classList.add('no-scroll');
+drawer.classList.add('drawer--full');
+
+currentState = { title: title, items: items, kind: kind || 'entity' }; // mantém o estado
+refreshNavControls(); // atualiza controles de navegação
+
+} else if (kind==='overdue' || kind==='pending' || kind==='paid') {
+  var items = norm.slice();
+
+  // ==== EXTRATO ESPECIAL PARA "RECEBIDO" ====
+  if (kind === 'paid') {
+    // 1) agrupa por (entidade+curso) para numerar parcelas
+    var buckets = {}; // key: ent|course -> [{...}]
+    items.forEach(function(i){
+      var key = (i.entity||'-')+'|'+(i.course||'-');
+      (buckets[key]||(buckets[key]=[])).push(i);
+    });
+
+    // 2) dentro de cada curso, ordena por data ASC e marca "install_no"
+    Object.keys(buckets).forEach(function(k){
+      buckets[k].sort(function(a,b){
+        var da = a.due_date ? new Date(a.due_date).getTime() : 0;
+        var db = b.due_date ? new Date(b.due_date).getTime() : 0;
+        return da - db; // ascendente para achar 1ª, 2ª, 3ª...
       });
-      var lines = relInst.map(function(item){
-        var d=safeDate(item.due_date); var when=d? d.toLocaleDateString("pt-BR") : "-";
-        var status=String(item.status||"").toUpperCase();
-        return '<div class="info-line"><div><strong>'+when+'</strong><span>'+esc(status)+'</span></div><span class="tag">'+formatBRL(item.amount)+'</span></div>';
-      }).join('');
-      var installmentsHtml = lines
-        ? '<div class="drawer__section"><header class="drawer__section-head"><h4>Pagamentos e a receber</h4></header><div class="drawer__list">'+lines+'</div></div>'
-        : '<div class="drawer__section"><div class="alert">Nenhuma parcela encontrada para este curso.</div></div>';
+      buckets[k].forEach(function(it, idx){
+        it.__install_no = idx + 1;              // 1,2,3...
+        // se no futuro helpers trouxer "inst_total", usamos; senão deixamos só ordinal
+        it.__install_total = (typeof it.inst_total === 'number' && it.inst_total>0) ? it.inst_total : null;
+      });
+    });
 
-      dBody.innerHTML = sumHtml + installmentsHtml;
+    // 3) ordena lista final por data DESC (extrato: mais recente no topo)
+    items.sort(function(a,b){
+      var da = a.due_date ? new Date(a.due_date).getTime() : 0;
+      var db = b.due_date ? new Date(b.due_date).getTime() : 0;
+      return (db - da) || ((b.amount||0) - (a.amount||0));
+    });
+  } else {
+    // pendentes/vencidos: mantém comportamento atual (por data DESC)
+    items.sort(function(a,b){
+      var da = a.due_date ? new Date(a.due_date).getTime() : 0;
+      var db = b.due_date ? new Date(b.due_date).getTime() : 0;
+      return (db - da) || ((b.amount||0) - (a.amount||0));
+    });
+  }
 
-   } else if (kind==='overdue' || kind==='pending' || kind==='paid') {
-  // visão simplificada (ordenado: mais recente no topo)
-  var listItems = norm.slice().sort(function(a,b){
-    var da = a.due_date ? new Date(a.due_date).getTime() : 0;
-    var db = b.due_date ? new Date(b.due_date).getTime() : 0;
-    // DESC: data mais recente primeiro; se empatar, maior valor primeiro
-    return (db - da) || ((b.amount||0) - (a.amount||0));
-  }).map(function(i){
+  // render
+  var listItems = items.map(function(i){
     var subtitle = [i.entity||'', i.course||''].filter(Boolean).join(' - ');
     var when = (i.due_date ? new Date(i.due_date).toLocaleDateString('pt-BR') : '-');
-    return '<div class="info-line js-course" data-entity="'+escAttr(i.entity||'-')+'" data-course="'+escAttr(i.course||'-')+'">'+
-           '<div><strong>'+when+'</strong><span>'+esc(subtitle)+'</span></div>'+
-           '<span class="tag">'+formatBRL(i.amount)+'</span></div>';
+
+    // chip de parcela só quando for "Recebido"
+    var parcelaChip = '';
+    if (kind === 'paid' && i.__install_no) {
+      var label = i.__install_total ? (i.__install_no + '/' + i.__install_total) : (i.__install_no + 'ª parcela');
+      parcelaChip = '<span class="chip" style="margin-left:8px">'+esc(label)+'</span>';
+    }
+
+    return '<div class="info-line js-course" '+
+           ' data-entity="'+escAttr(i.entity||'-')+'" '+
+           ' data-course="'+escAttr(i.course||'-')+'" '+
+           ' data-inline-open="1"'+
+           ' onclick="var ev=event||window.event; if(ev){ev.stopPropagation();} window.dashboardOpenCourse(\''+escAttr(i.entity||'-')+'\', \''+escAttr(i.course||'-')+'\'); return false;">'+
+             '<div><strong>'+when+'</strong><span>'+esc(subtitle)+'</span>'+parcelaChip+'</div>'+
+             '<span class="tag">'+formatBRL(i.amount)+'</span>'+
+           '</div>';
   }).join('');
 
   var html = '<div class="drawer__section">'+
@@ -992,17 +1175,18 @@ $pctOvd=$base>0?min(100,round($overdue/$base*100)):0;
              '</div>';
 
   dBody.innerHTML = summaryHtml + html;
-}
-
-    if(!drawer.classList.contains('drawer--open')){
-      drawer.classList.add('drawer--open');
-      body.classList.add('no-scroll');
-    }
-    drawer.classList.add('drawer--full');
-
-    // estado atual
-    currentState = { title: title, items: items, kind: kind||'pending' };
+  animateDrawer(direction);
+  if(!drawer.classList.contains('drawer--open')){
+    drawer.classList.add('drawer--open');
   }
+  body.classList.add('no-scroll');
+  drawer.classList.add('drawer--full');
+
+  // estado atual
+  currentState = { title: title, items: items, kind: kind||'pending' };
+  refreshNavControls();
+}
+}
 
   // Abridores (KPIs + entidades/curso da lista)
   function bindOpeners(){
@@ -1046,6 +1230,7 @@ $pctOvd=$base>0?min(100,round($overdue/$base*100)):0;
       }
       var elCourse = e.target.closest('.js-course');
       if (elCourse) {
+        if(elCourse.getAttribute('data-inline-open') === '1'){ return; }
         var en = elCourse.getAttribute('data-entity') || '';
         var cn = elCourse.getAttribute('data-course') || '';
         var detail = collectCourseDetail(en, cn);
@@ -1054,6 +1239,24 @@ $pctOvd=$base>0?min(100,round($overdue/$base*100)):0;
     });
   }
   bindOpeners();
+  refreshNavControls();
+
+  // abrir curso de qualquer lugar (usado pelos itens do "Recebido")
+  window.dashboardOpenCourse = function(en, cn){
+    var detail = collectCourseDetail(en || '', cn || '');
+    openDrawer(cn || 'Curso', detail, 'course', {push:true});
+  };
+
+  // expõe para os onClick inline dos cards de KPI
+  window.dashboardOpenStatus = function(kind){
+    var raw = Array.isArray(datasetAll) ? datasetAll : [];
+    var items = raw.filter(function(i){
+      if(kind === 'pending'){ return (i.status==='pending' || i.status==='overdue'); }
+      return i.status === kind; // 'paid' ou 'overdue'
+    });
+    var ttl = (kind === 'paid') ? 'Recebidos' : (kind === 'overdue' ? 'Vencidos' : 'A Receber');
+    openDrawer(ttl, items, kind, {push:false});
+  };
 
   // ESC fecha modal/drawer
   window.addEventListener('keydown',function(e){
@@ -1071,16 +1274,8 @@ $pctOvd=$base>0?min(100,round($overdue/$base*100)):0;
 
 
 
-<style>
-.progress .bar {
-  background: linear-gradient(90deg, #22d3ee, #06b6d4) !important;
-  height: 6px !important;
-  opacity: 1 !important;
-  display: block !important;
-}
-.progress {
-  background: rgba(30,41,59,0.4) !important;
-  min-height: 6px !important;
-  overflow: visible !important;
-}
-</style>
+
+
+
+
+
