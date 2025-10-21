@@ -26,6 +26,73 @@ function remove_accents($s){
   return $r !== false ? $r : $s;
 }
 
+function squash_spaces($s){
+  $s = str_replace(["\xC2\xA0", "\xE2\x80\x8B"], ' ', _u($s)); // NBSP, ZWSP
+  $s = preg_replace('/\s+/u', ' ', $s);
+  return trim($s);
+}
+
+function normalize_class_key($s){
+  $s = squash_spaces($s);
+  $s = remove_accents(mb_strtolower($s,'UTF-8'));
+  $s = str_replace(['-','_'],' ',$s);
+  $s = preg_replace('/\s+/u',' ',$s);
+  $s = trim($s);
+  if($s==='') return 'sem classificacao';
+  // mapeamentos
+  $map = [
+    'in company'       => 'incompany',
+    'incompany'        => 'incompany',
+    'curso aberto'     => 'curso aberto',
+    'consultoria'      => 'consultoria',
+    'ead'              => 'ead',
+    'pro labore'       => 'pro-labore',
+    'pro lab ore'      => 'pro-labore',
+    'pro-labore'       => 'pro-labore',
+    'simples repasse'  => 'simples repasse',
+  ];
+  return $map[$s] ?? $s;
+}
+
+/** Normaliza classificação para uma CHAVE canônica sem acento/espacos/hífens */
+function normalize_class_key($s){
+  $s = squash_spaces($s);
+  $s = remove_accents(mb_strtolower($s, 'UTF-8'));
+
+  // normaliza separadores comuns
+  $s = str_replace(['-', '_'], ' ', $s);
+  $s = preg_replace('/\s+/u', ' ', $s);
+  $s = trim($s);
+
+  // unifica variantes
+  $map = [
+    'in company'       => 'incompany',
+    'incompany'        => 'incompany',
+    'curso aberto'     => 'curso aberto',
+    'ead'              => 'ead',
+    'consultoria'      => 'consultoria',
+    'pro labore'       => 'pro-labore',
+    'pro-labore'       => 'pro-labore',
+    'simples repasse'  => 'simples repasse',
+  ];
+  if ($s==='') return 'sem classificacao';
+  return $map[$s] ?? $s; // deixa passar outros nomes, mas sempre “limpos”
+}
+
+/** Rótulo “bonito” a partir da chave canônica */
+function class_label_from_key($key){
+  $labels = [
+    'consultoria'       => 'Consultoria',
+    'incompany'         => 'Incompany',
+    'curso aberto'      => 'Curso Aberto',
+    'ead'               => 'EAD',
+    'pro-labore'        => 'Pró-labore',
+    'simples repasse'   => 'Simples Repasse',
+    'sem classificacao' => 'Sem Classificação',
+  ];
+  return $labels[$key] ?? mb_convert_case($key, MB_CASE_TITLE, 'UTF-8');
+}
+
 function normalize_header_key($s){
   $s = _u($s);
   $s = mb_strtolower(trim($s), 'UTF-8');
@@ -179,7 +246,6 @@ function brl($v){ return 'R$ '.number_format((float)$v, 2, ',', '.'); }
    MAPEAMENTO DE LINHA
 ========================= */
 function map_row($r){
-  // acesso flexível por nomes prováveis
   $get = function(array $cands) use ($r){
     foreach($cands as $c){
       $k = normalize_header_key($c);
@@ -189,14 +255,16 @@ function map_row($r){
   };
 
   // pagamentos 1..6 + datas
-  $payAmts=[]; $payDates=[];
+   $payAmts=[]; $payDates=[];
   for($i=1;$i<=6;$i++){
     $payAmts[$i]  = $get(["pagamento $i","pgmto $i","pgto $i","pgt $i","pag $i"]);
     $payDates[$i] = $get(["data $i","dt $i"]);
   }
 
-  // campos base
-  $classificacao = mb_strtolower(trim($get(['classificacao'])), 'UTF-8');
+// campos base
+  $rawClass   = $get(['classificacao']);
+$classificacao = squash_spaces($rawClass); // mantém a versão “humana”
+
 
   $dateStart = parse_date_any($get([
     'data inicio','data início','data_inicial','data_inicio','datainicio'
@@ -326,33 +394,52 @@ function get_data($forceRefresh=false){
   // 3) monta estruturas
   $todayIso = date('Y-m-d');
 
-  $entitiesMap = [];   // agrupamento pra UI
   $installments = [];  // parcelas p/ telas (paid = cada pagamento; pending = 1 linha com "valor a receber")
   $sumReceivable = 0.0;
   $sumReceived   = 0.0;
   $sumOverdue    = 0.0;
+  $groupsMap     = [];
 
   foreach($rows as $e){
     // ignora linhas vazias
     if(trim($e['entity'])==='' && trim($e['course'])==='') continue;
 
-    // totais de pagamentos recebidos (até 6)
-    $received = 0.0; $paymentsUI=[];
-    foreach($e['payments'] as $p){
-      $amt = (float)($p['amount'] ?? 0);
-      if($amt > 0){
-        $received += $amt;
+    // totais de pagamentos recebidos (até 6) — NOVA LÓGICA
+    $received   = 0.0;
+    $paymentsUI = [];
 
-        // parcela "paid" (com ou sem data)
-        $installments[] = [
-          'entity'   => $e['entity'] ?: '-',
-          'course'   => $e['course'] ?: '-',
-          'amount'   => $amt,
-          'due_date' => $p['date'] ?: null,  // usa a data do pagamento quando houver
-          'status'   => 'paid',
-        ];
-        $paymentsUI[] = ['amount'=>$amt, 'date'=>$p['date']];
+    // colete primeiro as parcelas pagas (não zeradas) preservando o índice 1..6
+    $paidList = [];
+    foreach($e['payments'] as $idx=>$p){
+      $i    = $idx + 1; // 1..6
+      $amt  = (float)($p['amount'] ?? 0);
+      $date = $p['date'] ?: null; // ISO
+      if($amt > 0){
+        $paidList[] = ['i'=>$i, 'amount'=>$amt, 'date'=>$date];
       }
+    }
+    $instTotal = count($paidList);
+
+    // some e popule installments (status=paid) usando a **data do pagamento**
+    foreach($paidList as $pp){
+      $received += $pp['amount'];
+
+      $installments[] = [
+        'entity'     => $e['entity'] ?: '-',
+        'course'     => $e['course'] ?: '-',
+        'amount'     => $pp['amount'],
+        'due_date'   => $pp['date'] ?: null,   // <- data do pagamento
+        'status'     => 'paid',
+        'inst_no'    => $pp['i'],              // 1..6
+        'inst_total' => $instTotal,
+      ];
+
+      $paymentsUI[] = [
+        'amount'     => $pp['amount'],
+        'date'       => $pp['date'],
+        'inst_no'    => $pp['i'],
+        'inst_total' => $instTotal
+      ];
     }
 
     // valor a receber (coluna nova; se vier vazio, fallback = honorarium - received)
@@ -386,49 +473,69 @@ function get_data($forceRefresh=false){
         'status'   => ($vencIso && $vencIso < $todayIso) ? 'overdue' : 'pending',
       ];
     }
+    // ===== AGRUPAMENTO: por CLASSIFICAÇÃO (não por entidade) =====
+$classKey  = normalize_class_key($e['classificacao'] ?? '');
+$className = class_label_from_key($classKey);
 
-    // agrupa por entidade → cursos
-    $entKey = $e['entity'] ?: '-';
-    if(!isset($entitiesMap[$entKey])){
-      $entitiesMap[$entKey] = ['name'=>$entKey, 'items'=>[], 'total'=>0.0, 'received'=>0.0];
-    }
+if (!isset($groupsMap[$classKey])) {
+  $groupsMap[$classKey] = [
+    'key'      => $classKey,
+    'name'     => $className,
+    'items'    => [],
+    'total'    => 0.0,
+    'received' => 0.0,
+  ];
+}
+
 
     // range mostrado na lista (sempre BR via dmy())
     $range = '-';
-    if($e['date_start'] || $e['date_end']){
+    if ($e['date_start'] || $e['date_end']) {
       $range = ($e['date_start'] ? dmy($e['date_start']) : '—').' — '.($e['date_end'] ? dmy($e['date_end']) : '—');
     }
 
     $totalValue = $hon > 0 ? $hon : ($received + $pendingNow);
-    if($totalValue <= 0 && $received > 0){
-      $totalValue = $received;
-    }
-    if($totalValue > 0 && $received > $totalValue){
-      $totalValue = $received;
-    }
+    if ($totalValue <= 0 && $received > 0) $totalValue = $received;
+    if ($totalValue > 0 && $received > $totalValue) $totalValue = $received;
     $pendingDisplay = max(0.0, $totalValue - $received);
 
     $item = [
+      'entity'     => $e['entity'] ?: '-',        // <- mantém a entidade dentro do item (útil para mostrar no card)
       'course'     => $e['course'] ?: '-',
       'ch'         => trim($e['ch']) !== '' ? $e['ch'] : '-',
       'range'      => $range,
-      'date_start' => $e['date_start'],           // ISO bruto p/ detalhes
-      'date_end'   => $e['date_end'],             // ISO bruto p/ detalhes
+      'date_start' => $e['date_start'],
+      'date_end'   => $e['date_end'],
       'value'      => round($totalValue, 2),
       'received'   => round($received, 2),
       'pending'    => round($pendingDisplay, 2),
       'vencimento' => $vencIso,                   // pode ser null em Consultoria
-      'class'      => $e['classificacao'] ?: '',
+      'class'      => $classKey,                  // chave da classificação
       'payments'   => $paymentsUI,
     ];
-    $entitiesMap[$entKey]['items'][] = $item;
-    $entitiesMap[$entKey]['total']   += $item['value'];
-    $entitiesMap[$entKey]['received']+= $item['received'];
+
+    $groupsMap[$classKey]['items'][] = $item;
+    $groupsMap[$classKey]['total']   += $item['value'];
+    $groupsMap[$classKey]['received']+= $item['received'];
   }
 
-  // ordena entidades por nome
-  $entities = array_values($entitiesMap);
-  usort($entities, fn($a,$b)=> strcmp($a['name'],$b['name']));
+  // ordenar grupos (ordem personalizada)
+  $entities = array_values($groupsMap);
+  $order = [
+    'consultoria'      => 1,
+    'incompany'        => 2,
+    'curso aberto'     => 3,
+    'ead'              => 4,
+    'pró-labore'       => 5,
+    'pro-labore'       => 5,
+    'simples repasse'  => 6,
+  ];
+  usort($entities, function($a, $b) use ($order){
+    $ka = $order[$a['key']] ?? 999;
+    $kb = $order[$b['key']] ?? 999;
+    if ($ka === $kb) return strcmp($a['name'], $b['name']);
+    return $ka <=> $kb;
+  });
 
   $data = [
     'created_at'   => time(),
@@ -437,7 +544,7 @@ function get_data($forceRefresh=false){
       'received'   => $sumReceived,
       'overdue'    => $sumOverdue,
     ],
-    'entities'     => $entities,
+    'entities'     => $entities,   // mantém o mesmo nome esperado pela UI
     'installments' => $installments,
   ];
 
@@ -482,4 +589,3 @@ function save_settings($in){
   @file_put_contents(_settings_path(), json_encode($s, JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT));
   return $s;
 }
-
