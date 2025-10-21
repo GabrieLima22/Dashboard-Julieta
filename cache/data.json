@@ -1,1083 +1,1174 @@
 {
-    "created_at": 1760619787,
-    "totals": {
-        "receivable": 12524,
-        "received": 0,
-        "overdue": 12322
+    "created_at": 1761080835,
+    "kpis": {
+        "receivable": 112300,
+        "received": 229325.89,
+        "overdue": 62200
     },
-    "upcoming": [],
     "entities": [
         {
-            "name": "-",
+            "key": "consultoria",
+            "name": "Consultoria",
             "items": [
                 {
-                    "range": "",
-                    "ch": "5",
-                    "course": "ALTERAÇÕES NO REGULAMENTO DE LICITAÇÕES E CONTRATOS DO SEBRAE",
-                    "value": 10000,
-                    "received": 0,
-                    "pending": 10000
-                },
-                {
-                    "range": "",
-                    "ch": "1",
-                    "course": "PLANO DE CONTRATAÇÃO ANUAL",
-                    "value": 0,
-                    "received": 0,
-                    "pending": 0
-                },
-                {
-                    "range": "",
-                    "ch": "16",
-                    "course": "CONTRATO DE COMPRAS E SERVIÇOS",
-                    "value": 5000,
-                    "received": 0,
-                    "pending": 5000
-                },
-                {
-                    "range": "",
-                    "ch": "16",
-                    "course": "IN COMPANY ABERTO",
-                    "value": 6000,
-                    "received": 0,
-                    "pending": 6000
-                },
-                {
-                    "range": "",
-                    "ch": "8",
-                    "course": "ELABORAÇÃO DE EDITAIS E CONTRATOS ",
-                    "value": 2000,
-                    "received": 0,
-                    "pending": 2000
-                },
-                {
-                    "range": "",
-                    "ch": "16",
-                    "course": "A CONFECÇÃO DE ARTEFATOS PARA AS LICITAÇÕES DE SUCESSO - ESTUDO SOBRE ETP, TR E EDITAL - TURMA 01",
-                    "value": 4000,
-                    "received": 0,
-                    "pending": 4000
-                },
-                {
-                    "range": "",
-                    "ch": "16",
-                    "course": "A CONFECÇÃO DE ARTEFATOS PARA AS LICITAÇÕES DE SUCESSO - ESTUDO SOBRE ETP, TR E EDITAL - TURMA 01",
-                    "value": 4000,
-                    "received": 0,
-                    "pending": 4000
-                },
-                {
-                    "range": "",
-                    "ch": "8",
-                    "course": " EAD JML",
-                    "value": 4000,
-                    "received": 0,
-                    "pending": 4000
-                },
-                {
-                    "range": "",
-                    "ch": "16",
-                    "course": "FOCO II - CURSO 04 - CURSO COMPLETO DE GESTÃO E FISCALIZAÇÃO DE CONTRATOS ADM DO SISTEMA S - SENAC",
-                    "value": 4000,
-                    "received": 0,
-                    "pending": 4000
-                },
-                {
-                    "range": "",
-                    "ch": "32",
-                    "course": "TURMAS 1 E 2 - A NOVA LEI DE LICITAÇÕES",
-                    "value": 8000,
-                    "received": 0,
-                    "pending": 8000
-                },
-                {
-                    "range": "",
-                    "ch": "12",
-                    "course": "CONTRATAÇÃO DIRETA NA NOVA LEI DE LICITAÇÕES",
-                    "value": 3000,
-                    "received": 0,
-                    "pending": 3000
-                },
-                {
-                    "range": "",
-                    "ch": "16",
-                    "course": "A CONFECÇÃO DE ARTEFATOS PARA AS LICITAÇÕES DE SUCESSO - ESTUDO SOBRE ETP, TR E EDITAL - TURMA 01",
-                    "value": 4000,
-                    "received": 0,
-                    "pending": 4000
-                },
-                {
-                    "range": "",
-                    "ch": "16",
-                    "course": "A CONFECÇÃO DE ARTEFATOS PARA AS LICITAÇÕES DE SUCESSO - ESTUDO SOBRE ETP, TR E EDITAL - TURMA 01",
-                    "value": 4000,
-                    "received": 0,
-                    "pending": 4000
-                },
-                {
-                    "range": "",
-                    "ch": "24",
-                    "course": " NUCLEO S 2022",
-                    "value": 10000,
-                    "received": 0,
-                    "pending": 10000
-                },
-                {
-                    "range": "",
-                    "ch": "",
-                    "course": "",
-                    "value": 13440,
-                    "received": 0,
-                    "pending": 13440
-                },
-                {
-                    "range": "19\/01\/2025",
-                    "ch": "16",
-                    "course": "PLANEJAMENTO DAS CONTRATAÇÕES",
-                    "value": 6400,
-                    "received": 0,
-                    "pending": 6400
-                },
-                {
-                    "range": "15\/02\/2024",
-                    "ch": "16",
-                    "course": "SEMINÁRIO NACIONAL SISTEMA S:",
-                    "value": 6800,
-                    "received": 0,
-                    "pending": 6800
-                },
-                {
-                    "range": "08\/03\/2024",
-                    "ch": "24",
-                    "course": "NOVO REGULAMENTO",
-                    "value": 9600,
-                    "received": 0,
-                    "pending": 9600
-                },
-                {
-                    "range": "",
-                    "ch": "24",
-                    "course": "NOVO REGULAMENTO",
-                    "value": 9600,
-                    "received": 0,
-                    "pending": 9600
-                },
-                {
-                    "range": "",
-                    "ch": "16",
-                    "course": "TURMA 1",
-                    "value": 6400,
-                    "received": 0,
-                    "pending": 6400
-                },
-                {
-                    "range": "",
-                    "ch": "16",
-                    "course": "TURMA 2",
-                    "value": 6400,
-                    "received": 0,
-                    "pending": 6400
-                },
-                {
-                    "range": "-",
-                    "ch": "24",
-                    "course": "NOVA LEGISLAÇÃO, IMPLICAÇÕES NAS LICITAÇÕES",
-                    "value": 9600,
-                    "received": 0,
-                    "pending": 9600
-                },
-                {
-                    "range": "30\/04\/2024",
-                    "ch": "",
-                    "course": "EAD GRAVADO",
-                    "value": 25000,
-                    "received": 0,
-                    "pending": 25000
-                },
-                {
-                    "range": "",
-                    "ch": "24",
-                    "course": "NOTA TÉCNICA",
-                    "value": 9600,
-                    "received": 0,
-                    "pending": 9600
-                },
-                {
-                    "range": "",
-                    "ch": "",
-                    "course": "EAD GRAVADO",
-                    "value": 12000,
-                    "received": 0,
-                    "pending": 12000
-                },
-                {
-                    "range": "",
-                    "ch": "24",
-                    "course": "NOVO REGULAMENTO DE LICITAÇÕES E CONTRATOS DO SESC E SENAC",
-                    "value": 9600,
-                    "received": 0,
-                    "pending": 9600
-                },
-                {
-                    "range": "31\/07\/2024",
-                    "ch": "24",
-                    "course": "NOVO REGULAMENTO DE LICITAÇÕES E CONTRATOS DO SESC E SENAC",
-                    "value": 9600,
-                    "received": 0,
-                    "pending": 9600
-                },
-                {
-                    "range": "",
-                    "ch": "24",
-                    "course": "NOVO REGULAMENTO",
-                    "value": 9600,
-                    "received": 0,
-                    "pending": 9600
-                },
-                {
-                    "range": "",
-                    "ch": "",
-                    "course": "NÚCLEO 2024",
-                    "value": 10000,
-                    "received": 0,
-                    "pending": 10000
-                },
-                {
-                    "range": "",
-                    "ch": "16",
-                    "course": "GESTÃO E FISCALIZAÇÃO",
-                    "value": 6400,
-                    "received": 0,
-                    "pending": 6400
-                },
-                {
-                    "range": "",
-                    "ch": "40",
-                    "course": "NOVO REGULAMENTO turmas 1 e 2",
-                    "value": 18000,
-                    "received": 0,
-                    "pending": 18000
-                },
-                {
-                    "range": "",
-                    "ch": "36",
-                    "course": "NOVO REGULAMENTO",
-                    "value": 16400,
-                    "received": 0,
-                    "pending": 16400
-                },
-                {
-                    "range": "",
-                    "ch": "36",
-                    "course": "TURMAS 01 E 02",
-                    "value": 18000,
-                    "received": 0,
-                    "pending": 18000
-                },
-                {
-                    "range": "",
-                    "ch": "1",
-                    "course": "PALESTRA Sensibilização para princípios gerais de contratações\nGoiânia - GO",
-                    "value": 2000,
-                    "received": 0,
-                    "pending": 2000
-                },
-                {
-                    "range": "",
-                    "ch": "16",
-                    "course": "GESTÃO E FISCALIZAÇÃO DE CONTRATOS",
-                    "value": 8000,
-                    "received": 0,
-                    "pending": 8000
-                },
-                {
-                    "range": "",
-                    "ch": "",
-                    "course": "CONSULTORIA SESC SENAC GO",
-                    "value": 25000,
-                    "received": 0,
-                    "pending": 25000
-                },
-                {
-                    "range": "",
-                    "ch": "20",
-                    "course": "PLANEJAMENTO DAS CONTRATAÇÕES",
-                    "value": 10000,
-                    "received": 0,
-                    "pending": 10000
-                },
-                {
-                    "range": "",
-                    "ch": "4",
-                    "course": "NOVO REGULAMENTO DE LICITAÇÕES - PARA A COMISSÃO PERMANENTE DE LICITAÇÃO",
-                    "value": 2200,
-                    "received": 0,
-                    "pending": 2200
-                },
-                {
-                    "range": "",
-                    "ch": "24",
-                    "course": "PROCESSO DE SELEÇÃO E CONTRATAÇÃO DE ACORDO COM O NOVO REGULAMENTO DO SESI\/SENAI",
-                    "value": 13200,
-                    "received": 0,
-                    "pending": 13200
-                },
-                {
-                    "range": "",
-                    "ch": "24",
-                    "course": "PROCESSO DE SELEÇÃO E CONTRATAÇÃO DE ACORDO COM O NOVO REGULAMENTO DO SESI\/SENAI",
-                    "value": 13200,
-                    "received": 0,
-                    "pending": 13200
-                },
-                {
-                    "range": "",
-                    "ch": "24",
-                    "course": "O NOVO REGULAMENTO DE LICITAÇÕES E CONTRATOS DO SESC E SENAC",
-                    "value": 12000,
-                    "received": 0,
-                    "pending": 12000
-                },
-                {
-                    "range": "",
-                    "ch": "24",
-                    "course": "CURSO ABERTO",
-                    "value": 15000,
-                    "received": 0,
-                    "pending": 15000
-                },
-                {
-                    "range": "",
-                    "ch": "",
-                    "course": "GRAVAÇÃO EAD",
-                    "value": 5000,
-                    "received": 0,
-                    "pending": 5000
-                },
-                {
-                    "range": "",
-                    "ch": "36",
-                    "course": "TURMA 01 - PLANEJAMENTO DAS CONTRATAÇÕES - ELABORAÇÃO DE TERMO DE REFERÊNCIA, PROJETO BÁSICO E ESTUDO TÉCNICO PRELIMINAR",
-                    "value": 18000,
-                    "received": 0,
-                    "pending": 18000
-                },
-                {
-                    "range": "",
-                    "ch": "16",
-                    "course": "TURMA 02 - GESTÃO E FISCALIZAÇÃO DE CONTRATOS",
-                    "value": 8000,
-                    "received": 0,
-                    "pending": 8000
-                },
-                {
-                    "range": "",
-                    "ch": "24",
-                    "course": "NOVO REGULAMENTO DE LICITAÇÕES E CONTRATOS DO SESC",
-                    "value": 12000,
-                    "received": 0,
-                    "pending": 12000
-                },
-                {
-                    "range": "",
-                    "ch": "16",
-                    "course": "GESTÃO E FISCALIZAÇÃO DE CONTRATOS BASEADOS NO REGULAMENTO INTERNO DE LICITAÇÕES E CONTRATOS DA FUNDAÇÃO PARQUE TECNOLÓGICO ITAIPU",
-                    "value": 8000,
-                    "received": 0,
-                    "pending": 8000
-                },
-                {
-                    "range": "",
-                    "ch": "24",
-                    "course": "Planejamento das Contratações e Gestão Contratual",
-                    "value": 12000,
-                    "received": 0,
-                    "pending": 12000
-                },
-                {
-                    "range": "",
-                    "ch": "",
+                    "entity": "SENAR TO",
                     "course": "CONSULTORIA",
+                    "ch": "-",
+                    "range": "-",
+                    "date_start": null,
+                    "date_end": null,
                     "value": 6000,
-                    "received": 0,
-                    "pending": 6000
+                    "received": 6000,
+                    "pending": 0,
+                    "vencimento": null,
+                    "class": "consultoria",
+                    "payments": [
+                        {
+                            "amount": 1000,
+                            "date": "2025-02-07",
+                            "inst_no": 1,
+                            "inst_total": 3
+                        },
+                        {
+                            "amount": 2000,
+                            "date": "2025-02-14",
+                            "inst_no": 2,
+                            "inst_total": 3
+                        },
+                        {
+                            "amount": 3000,
+                            "date": null,
+                            "inst_no": 3,
+                            "inst_total": 3
+                        }
+                    ]
                 },
                 {
-                    "range": "",
-                    "ch": "16",
-                    "course": "CURSO AVANÇADO - NOVO REGULAMENTO DE LICITAÇÕES E CONTRATOS",
-                    "value": 8000,
-                    "received": 0,
-                    "pending": 8000
-                },
-                {
-                    "range": "",
-                    "ch": "40",
-                    "course": "CURSO BASICO DE LICITACOES E CONTRATOS",
-                    "value": 18000,
-                    "received": 0,
-                    "pending": 18000
-                },
-                {
-                    "range": "",
-                    "ch": "2",
-                    "course": "INTELIGÊNCIA ARTIFICIAL APLICADA ÀS LICITAÇÕES E CONTRATAÇÕES DO SISTEMA S: TEORIA & PRÁTICA",
-                    "value": 2000,
-                    "received": 0,
-                    "pending": 2000
-                },
-                {
-                    "range": "",
-                    "ch": "2",
-                    "course": "INTELIGÊNCIA ARTIFICIAL APLICADA ÀS LICITAÇÕES E CONTRATAÇÕES DO SISTEMA S: TEORIA & PRÁTICA - VERSÃO ONLINE",
-                    "value": 2000,
-                    "received": 0,
-                    "pending": 2000
-                },
-                {
-                    "range": "",
-                    "ch": "32",
-                    "course": "DO PLANEJAMENTO DAS CONTRATAÇÕES À GESTÃO E FISCALIZAÇÃO DE CONTRATOS",
-                    "value": 16000,
-                    "received": 0,
-                    "pending": 16000
-                },
-                {
-                    "range": "",
-                    "ch": "24",
-                    "course": "CONTRATAÇÃO DE OBRAS E SERVIÇOS DE ENGENHARIA EM DIVERSOS REGIMES",
-                    "value": 6500,
-                    "received": 0,
-                    "pending": 6500
-                },
-                {
-                    "range": "",
-                    "ch": "24",
-                    "course": "NOVO REGULAMENTO DE LICITAÇÕES E CONTRATOS DO SENAC",
-                    "value": 15600,
-                    "received": 0,
-                    "pending": 15600
-                },
-                {
-                    "range": "",
-                    "ch": "4",
-                    "course": "PALESTRA - BOAS PRÁTICAS NA ELABORAÇÃO DE TERMO DE REFERÊNCIA",
-                    "value": 2500,
-                    "received": 0,
-                    "pending": 2500
-                },
-                {
-                    "range": "",
-                    "ch": "24",
-                    "course": "22ª NÚCLEO",
-                    "value": 18400,
-                    "received": 0,
-                    "pending": 18400
-                },
-                {
-                    "range": "",
-                    "ch": "16",
-                    "course": "23ª NÚCLEO",
-                    "value": 12400,
-                    "received": 0,
-                    "pending": 12400
-                },
-                {
-                    "range": "",
-                    "ch": "",
+                    "entity": "SENAC SC",
                     "course": "CONSULTORIA (JULIETA + ROBERTA)",
+                    "ch": "-",
+                    "range": "-",
+                    "date_start": null,
+                    "date_end": null,
                     "value": 55000,
-                    "received": 0,
-                    "pending": 55000
-                },
-                {
-                    "range": "",
-                    "ch": "16",
-                    "course": "GESTÃO E FISCALIZAÇÃO DE CONTRATOS PARA O SISTEMA S",
-                    "value": 10000,
-                    "received": 0,
-                    "pending": 10000
-                },
-                {
-                    "range": "",
-                    "ch": "16",
-                    "course": "GESTÃO E FISCALIZAÇÃO DE CONTRATOS PARA O SISTEMA S",
-                    "value": 10000,
-                    "received": 0,
-                    "pending": 10000
-                },
-                {
-                    "range": "",
-                    "ch": "16",
-                    "course": "PLANEJAMENTO DAS CONTRATAÇÕES",
-                    "value": 9600,
-                    "received": 0,
-                    "pending": 9600
-                },
-                {
-                    "range": "",
-                    "ch": "16",
-                    "course": "GESTÃO E FISCALIZAÇÃO DE CONTRATOS",
-                    "value": 9600,
-                    "received": 0,
-                    "pending": 9600
-                },
-                {
-                    "range": "",
-                    "ch": "16",
-                    "course": "ESTUDO E RESOLUÇÃO DE CASOS PRÁTICOS PARA O APRIMORAMENTO DE GESTORES E FISCAIS",
-                    "value": 11200,
-                    "received": 0,
-                    "pending": 11200
-                },
-                {
-                    "range": "",
-                    "ch": "16",
-                    "course": "ESTUDO E RESOLUÇÃO DE CASOS PRÁTICOS PARA O APRIMORAMENTO DE GESTORES E FISCAIS",
-                    "value": 11200,
-                    "received": 0,
-                    "pending": 11200
-                },
-                {
-                    "range": "",
-                    "ch": "16",
-                    "course": "EAD - PLANEJAMENTO DAS CONTRATAÇÕES",
-                    "value": 11600,
-                    "received": 0,
-                    "pending": 11600
-                },
-                {
-                    "range": "",
-                    "ch": "16",
-                    "course": "EAD - GESTÃO E FISCALIZAÇÃO DE CONTRATOS",
-                    "value": 11600,
-                    "received": 0,
-                    "pending": 11600
-                },
-                {
-                    "range": "",
-                    "ch": "8",
-                    "course": "CREDENCIAMENTO",
-                    "value": 5600,
-                    "received": 0,
-                    "pending": 5600
-                },
-                {
-                    "range": "",
-                    "ch": "20",
-                    "course": "PLANEJAMENTO DAS CONTRATAÇÕES - ELABORAÇÃO DE ESTUDO TÉCNICO PRELIMINAR, PROJETO BÁSICO E TERMO DE REFERÊNCIA",
-                    "value": 14000,
-                    "received": 0,
-                    "pending": 14000
-                },
-                {
-                    "range": "",
-                    "ch": "20",
-                    "course": "CURSO PRÁTICO PARA FORMAÇÃO E CAPACITAÇÃO DE FISCAIS E GESTORES DE CONTRATOS",
-                    "value": 14000,
-                    "received": 0,
-                    "pending": 14000
+                    "received": 55000,
+                    "pending": 0,
+                    "vencimento": null,
+                    "class": "consultoria",
+                    "payments": [
+                        {
+                            "amount": 9166.67,
+                            "date": null,
+                            "inst_no": 1,
+                            "inst_total": 4
+                        },
+                        {
+                            "amount": 18333.33,
+                            "date": null,
+                            "inst_no": 2,
+                            "inst_total": 4
+                        },
+                        {
+                            "amount": 12000,
+                            "date": null,
+                            "inst_no": 3,
+                            "inst_total": 4
+                        },
+                        {
+                            "amount": 15500,
+                            "date": null,
+                            "inst_no": 4,
+                            "inst_total": 4
+                        }
+                    ]
                 }
             ],
-            "total": 724840,
+            "total": 61000,
+            "received": 61000
+        },
+        {
+            "key": "incompany",
+            "name": "Incompany",
+            "items": [
+                {
+                    "entity": "SENAC MT",
+                    "course": "Planejamento das Contratações e Gestão Contratual",
+                    "ch": "24",
+                    "range": "22\/01\/2025 — 24\/01\/2025",
+                    "date_start": "2025-01-22",
+                    "date_end": "2025-01-24",
+                    "value": 12000,
+                    "received": 12000,
+                    "pending": 0,
+                    "vencimento": "2025-02-24",
+                    "class": "incompany",
+                    "payments": [
+                        {
+                            "amount": 12000,
+                            "date": "2025-02-25",
+                            "inst_no": 1,
+                            "inst_total": 1
+                        }
+                    ]
+                },
+                {
+                    "entity": "SENAC RO",
+                    "course": "CURSO AVANÇADO - NOVO REGULAMENTO DE LICITAÇÕES E CONTRATOS",
+                    "ch": "16",
+                    "range": "04\/02\/2025 — 05\/02\/2025",
+                    "date_start": "2025-02-04",
+                    "date_end": "2025-02-05",
+                    "value": 8000,
+                    "received": 8000,
+                    "pending": 0,
+                    "vencimento": "2025-03-05",
+                    "class": "incompany",
+                    "payments": [
+                        {
+                            "amount": 6000,
+                            "date": "2025-03-11",
+                            "inst_no": 1,
+                            "inst_total": 2
+                        },
+                        {
+                            "amount": 2000,
+                            "date": "2025-02-14",
+                            "inst_no": 2,
+                            "inst_total": 2
+                        }
+                    ]
+                },
+                {
+                    "entity": "SANEAGO",
+                    "course": "CURSO BASICO DE LICITACOES E CONTRATOS",
+                    "ch": "40",
+                    "range": "27\/02\/2025 — 27\/02\/2025",
+                    "date_start": "2025-02-27",
+                    "date_end": "2025-02-27",
+                    "value": 18000,
+                    "received": 18000,
+                    "pending": 0,
+                    "vencimento": "2025-03-27",
+                    "class": "incompany",
+                    "payments": [
+                        {
+                            "amount": 10000,
+                            "date": "2025-03-21",
+                            "inst_no": 1,
+                            "inst_total": 2
+                        },
+                        {
+                            "amount": 8000,
+                            "date": "2025-03-18",
+                            "inst_no": 2,
+                            "inst_total": 2
+                        }
+                    ]
+                },
+                {
+                    "entity": "APEX DF",
+                    "course": "DO PLANEJAMENTO DAS CONTRATAÇÕES À GESTÃO E FISCALIZAÇÃO DE CONTRATOS",
+                    "ch": "32",
+                    "range": "25\/03\/2025 — 28\/03\/2025",
+                    "date_start": "2025-03-25",
+                    "date_end": "2025-03-28",
+                    "value": 16000,
+                    "received": 16000,
+                    "pending": 0,
+                    "vencimento": "2025-04-28",
+                    "class": "incompany",
+                    "payments": [
+                        {
+                            "amount": 10000,
+                            "date": "2025-04-17",
+                            "inst_no": 1,
+                            "inst_total": 2
+                        },
+                        {
+                            "amount": 6000,
+                            "date": "2025-04-30",
+                            "inst_no": 2,
+                            "inst_total": 2
+                        }
+                    ]
+                },
+                {
+                    "entity": "SENAC SC",
+                    "course": "NOVO REGULAMENTO DE LICITAÇÕES E CONTRATOS DO SENAC",
+                    "ch": "24",
+                    "range": "14\/04\/2025 — 16\/04\/2025",
+                    "date_start": "2025-04-14",
+                    "date_end": "2025-04-16",
+                    "value": 15600,
+                    "received": 15500,
+                    "pending": 100,
+                    "vencimento": null,
+                    "class": "incompany",
+                    "payments": [
+                        {
+                            "amount": 4500,
+                            "date": "2025-05-15",
+                            "inst_no": 1,
+                            "inst_total": 4
+                        },
+                        {
+                            "amount": 5000,
+                            "date": "2025-05-19",
+                            "inst_no": 2,
+                            "inst_total": 4
+                        },
+                        {
+                            "amount": 1000,
+                            "date": "2025-07-11",
+                            "inst_no": 3,
+                            "inst_total": 4
+                        },
+                        {
+                            "amount": 5000,
+                            "date": "2025-10-10",
+                            "inst_no": 4,
+                            "inst_total": 4
+                        }
+                    ]
+                },
+                {
+                    "entity": "APEX DF",
+                    "course": "PALESTRA - BOAS PRÁTICAS NA ELABORAÇÃO DE TERMO DE REFERÊNCIA",
+                    "ch": "4",
+                    "range": "24\/04\/2025 — 24\/04\/2025",
+                    "date_start": "2025-04-24",
+                    "date_end": "2025-04-24",
+                    "value": 2500,
+                    "received": 2500,
+                    "pending": 0,
+                    "vencimento": "2025-05-24",
+                    "class": "incompany",
+                    "payments": [
+                        {
+                            "amount": 2500,
+                            "date": "2025-04-30",
+                            "inst_no": 1,
+                            "inst_total": 1
+                        }
+                    ]
+                },
+                {
+                    "entity": "SESC PA",
+                    "course": "GESTÃO E FISCALIZAÇÃO DE CONTRATOS PARA O SISTEMA S",
+                    "ch": "16",
+                    "range": "02\/06\/2025 — 05\/06\/2025",
+                    "date_start": "2025-06-02",
+                    "date_end": "2025-06-05",
+                    "value": 10000,
+                    "received": 10000,
+                    "pending": 0,
+                    "vencimento": "2025-07-05",
+                    "class": "incompany",
+                    "payments": [
+                        {
+                            "amount": 10000,
+                            "date": "2025-07-05",
+                            "inst_no": 1,
+                            "inst_total": 1
+                        }
+                    ]
+                },
+                {
+                    "entity": "SESC PA",
+                    "course": "GESTÃO E FISCALIZAÇÃO DE CONTRATOS PARA O SISTEMA S",
+                    "ch": "16",
+                    "range": "02\/06\/2025 — 05\/06\/2025",
+                    "date_start": "2025-06-02",
+                    "date_end": "2025-06-05",
+                    "value": 10000,
+                    "received": 10000,
+                    "pending": 0,
+                    "vencimento": "2025-07-05",
+                    "class": "incompany",
+                    "payments": [
+                        {
+                            "amount": 1500,
+                            "date": null,
+                            "inst_no": 1,
+                            "inst_total": 4
+                        },
+                        {
+                            "amount": 4000,
+                            "date": null,
+                            "inst_no": 2,
+                            "inst_total": 4
+                        },
+                        {
+                            "amount": 2500,
+                            "date": "2025-09-19",
+                            "inst_no": 3,
+                            "inst_total": 4
+                        },
+                        {
+                            "amount": 2000,
+                            "date": "2025-10-15",
+                            "inst_no": 4,
+                            "inst_total": 4
+                        }
+                    ]
+                },
+                {
+                    "entity": "SESI MT",
+                    "course": "PLANEJAMENTO DAS CONTRATAÇÕES",
+                    "ch": "16",
+                    "range": "01\/07\/2025 — 02\/07\/2025",
+                    "date_start": "2025-07-01",
+                    "date_end": "2025-07-02",
+                    "value": 9600,
+                    "received": 9600,
+                    "pending": 0,
+                    "vencimento": "2025-08-02",
+                    "class": "incompany",
+                    "payments": [
+                        {
+                            "amount": 9600,
+                            "date": "2025-09-19",
+                            "inst_no": 1,
+                            "inst_total": 1
+                        }
+                    ]
+                },
+                {
+                    "entity": "SESI MT",
+                    "course": "GESTÃO E FISCALIZAÇÃO DE CONTRATOS",
+                    "ch": "16",
+                    "range": "03\/07\/2025 — 07\/04\/2025",
+                    "date_start": "2025-07-03",
+                    "date_end": "2025-04-07",
+                    "value": 9600,
+                    "received": 9600,
+                    "pending": 0,
+                    "vencimento": "2025-08-04",
+                    "class": "incompany",
+                    "payments": [
+                        {
+                            "amount": 6600,
+                            "date": "2025-09-30",
+                            "inst_no": 1,
+                            "inst_total": 2
+                        },
+                        {
+                            "amount": 3000,
+                            "date": "2025-10-15",
+                            "inst_no": 2,
+                            "inst_total": 2
+                        }
+                    ]
+                },
+                {
+                    "entity": "SESC ES",
+                    "course": "ESTUDO E RESOLUÇÃO DE CASOS PRÁTICOS PARA O APRIMORAMENTO DE GESTORES E FISCAIS",
+                    "ch": "16",
+                    "range": "19\/08\/2025 — 20\/08\/2025",
+                    "date_start": "2025-08-19",
+                    "date_end": "2025-08-20",
+                    "value": 11200,
+                    "received": 3000,
+                    "pending": 8200,
+                    "vencimento": "2025-09-20",
+                    "class": "incompany",
+                    "payments": [
+                        {
+                            "amount": 3000,
+                            "date": "2025-10-15",
+                            "inst_no": 1,
+                            "inst_total": 1
+                        }
+                    ]
+                },
+                {
+                    "entity": "SESC ES",
+                    "course": "ESTUDO E RESOLUÇÃO DE CASOS PRÁTICOS PARA O APRIMORAMENTO DE GESTORES E FISCAIS",
+                    "ch": "16",
+                    "range": "19\/08\/2025 — 20\/08\/2025",
+                    "date_start": "2025-08-19",
+                    "date_end": "2025-08-20",
+                    "value": 11200,
+                    "received": 0,
+                    "pending": 11200,
+                    "vencimento": "2025-09-20",
+                    "class": "incompany",
+                    "payments": []
+                },
+                {
+                    "entity": "SENAC RO",
+                    "course": "CREDENCIAMENTO",
+                    "ch": "8",
+                    "range": "11\/09\/2025 — 12\/09\/2025",
+                    "date_start": "2025-09-11",
+                    "date_end": "2025-09-12",
+                    "value": 5600,
+                    "received": 0,
+                    "pending": 5600,
+                    "vencimento": "2025-10-12",
+                    "class": "incompany",
+                    "payments": []
+                },
+                {
+                    "entity": "SEBRAE SP",
+                    "course": "PLANEJAMENTO DAS CONTRATAÇÕES - ELABORAÇÃO DE ESTUDO TÉCNICO PRELIMINAR, PROJETO BÁSICO E TERMO DE REFERÊNCIA",
+                    "ch": "20",
+                    "range": "12\/08\/2025 — 14\/08\/2025",
+                    "date_start": "2025-08-12",
+                    "date_end": "2025-08-14",
+                    "value": 14000,
+                    "received": 0,
+                    "pending": 14000,
+                    "vencimento": "2025-09-14",
+                    "class": "incompany",
+                    "payments": []
+                },
+                {
+                    "entity": "SEBRAE BA",
+                    "course": "CURSO PRÁTICO PARA FORMAÇÃO E CAPACITAÇÃO DE FISCAIS E GESTORES DE CONTRATOS",
+                    "ch": "20",
+                    "range": "14\/10\/2025 — 16\/10\/2025",
+                    "date_start": "2025-10-14",
+                    "date_end": "2025-10-16",
+                    "value": 14000,
+                    "received": 0,
+                    "pending": 14000,
+                    "vencimento": "2025-11-16",
+                    "class": "incompany",
+                    "payments": []
+                }
+            ],
+            "total": 167300,
+            "received": 114200
+        },
+        {
+            "key": "curso aberto",
+            "name": "Curso Aberto",
+            "items": [
+                {
+                    "entity": "CURSO ABERTO",
+                    "course": "INTELIGÊNCIA ARTIFICIAL APLICADA ÀS LICITAÇÕES E CONTRATAÇÕES DO SISTEMA S: TEORIA & PRÁTICA",
+                    "ch": "2",
+                    "range": "12\/02\/2025 — 14\/02\/2025",
+                    "date_start": "2025-02-12",
+                    "date_end": "2025-02-14",
+                    "value": 2000,
+                    "received": 2000,
+                    "pending": 0,
+                    "vencimento": "2025-03-14",
+                    "class": "curso aberto",
+                    "payments": [
+                        {
+                            "amount": 2000,
+                            "date": "2025-02-28",
+                            "inst_no": 1,
+                            "inst_total": 1
+                        }
+                    ]
+                },
+                {
+                    "entity": "CURSO ABERTO",
+                    "course": "INTELIGÊNCIA ARTIFICIAL APLICADA ÀS LICITAÇÕES E CONTRATAÇÕES DO SISTEMA S: TEORIA & PRÁTICA - VERSÃO ONLINE",
+                    "ch": "2",
+                    "range": "17\/02\/2025 — 19\/02\/2025",
+                    "date_start": "2025-02-17",
+                    "date_end": "2025-02-19",
+                    "value": 2000,
+                    "received": 2000,
+                    "pending": 0,
+                    "vencimento": "2025-03-19",
+                    "class": "curso aberto",
+                    "payments": [
+                        {
+                            "amount": 2000,
+                            "date": "2025-03-28",
+                            "inst_no": 1,
+                            "inst_total": 1
+                        }
+                    ]
+                },
+                {
+                    "entity": "CURSO ABERTO",
+                    "course": "CONTRATAÇÃO DE OBRAS E SERVIÇOS DE ENGENHARIA EM DIVERSOS REGIMES",
+                    "ch": "24",
+                    "range": "02\/04\/2025 — 04\/04\/2025",
+                    "date_start": "2025-04-02",
+                    "date_end": "2025-04-04",
+                    "value": 6500,
+                    "received": 6500,
+                    "pending": 0,
+                    "vencimento": "2025-05-04",
+                    "class": "curso aberto",
+                    "payments": [
+                        {
+                            "amount": 6000,
+                            "date": "2025-05-10",
+                            "inst_no": 1,
+                            "inst_total": 2
+                        },
+                        {
+                            "amount": 500,
+                            "date": "2025-05-15",
+                            "inst_no": 2,
+                            "inst_total": 2
+                        }
+                    ]
+                },
+                {
+                    "entity": "CURSO ABERTO",
+                    "course": "22ª NÚCLEO",
+                    "ch": "24",
+                    "range": "14\/05\/2025 — 16\/05\/2025",
+                    "date_start": "2025-05-14",
+                    "date_end": "2025-05-16",
+                    "value": 18400,
+                    "received": 18400,
+                    "pending": 0,
+                    "vencimento": "2025-06-16",
+                    "class": "curso aberto",
+                    "payments": [
+                        {
+                            "amount": 8400,
+                            "date": "2025-06-13",
+                            "inst_no": 1,
+                            "inst_total": 3
+                        },
+                        {
+                            "amount": 7000,
+                            "date": "2025-07-27",
+                            "inst_no": 2,
+                            "inst_total": 3
+                        },
+                        {
+                            "amount": 3000,
+                            "date": "2025-07-11",
+                            "inst_no": 3,
+                            "inst_total": 3
+                        }
+                    ]
+                },
+                {
+                    "entity": "CURSO ABERTO",
+                    "course": "23ª NÚCLEO",
+                    "ch": "16",
+                    "range": "19\/05\/2025 — 20\/05\/2025",
+                    "date_start": "2025-05-19",
+                    "date_end": "2025-05-20",
+                    "value": 12400,
+                    "received": 12400,
+                    "pending": 0,
+                    "vencimento": "2025-06-20",
+                    "class": "curso aberto",
+                    "payments": [
+                        {
+                            "amount": 12400,
+                            "date": "2025-05-28",
+                            "inst_no": 1,
+                            "inst_total": 1
+                        }
+                    ]
+                },
+                {
+                    "entity": "CURSO ABERTO",
+                    "course": "CURSO PRÁTICO PARA FORMAÇÃO E CAPACITAÇÃO DE FISCAIS E GESTORES DE CONTRATOS",
+                    "ch": "16",
+                    "range": "18\/09\/2025 — 19\/09\/2025",
+                    "date_start": "2025-09-18",
+                    "date_end": "2025-09-19",
+                    "value": 0,
+                    "received": 0,
+                    "pending": 0,
+                    "vencimento": "2025-10-19",
+                    "class": "curso aberto",
+                    "payments": []
+                },
+                {
+                    "entity": "CURSO ABERTO",
+                    "course": "BOAS PRÁTICAS NAS CONTRATAÇÕES DAS ESTATAIS E A ADOÇÃO DE FERRAMENTAS DE INTELIGÊNCIA ARTIFICIAL: AVANÇOS E DESAFIOS",
+                    "ch": "24",
+                    "range": "22\/10\/2025 — 24\/10\/2025",
+                    "date_start": "2025-10-22",
+                    "date_end": "2025-10-24",
+                    "value": 0,
+                    "received": 0,
+                    "pending": 0,
+                    "vencimento": "2025-11-24",
+                    "class": "curso aberto",
+                    "payments": []
+                },
+                {
+                    "entity": "CURSO ABERTO",
+                    "course": "INOVAÇÕES NAS CONTRATAÇÕES DO SISTEMA “S”",
+                    "ch": "24",
+                    "range": "10\/11\/2025 — 12\/11\/2025",
+                    "date_start": "2025-11-10",
+                    "date_end": "2025-11-12",
+                    "value": 0,
+                    "received": 0,
+                    "pending": 0,
+                    "vencimento": "2025-12-12",
+                    "class": "curso aberto",
+                    "payments": []
+                }
+            ],
+            "total": 41300,
+            "received": 41300
+        },
+        {
+            "key": "ead",
+            "name": "Ead",
+            "items": [
+                {
+                    "entity": "SESI MT",
+                    "course": "EAD - PLANEJAMENTO DAS CONTRATAÇÕES",
+                    "ch": "16",
+                    "range": "27\/08\/2025 — 27\/08\/2025",
+                    "date_start": "2025-08-27",
+                    "date_end": "2025-08-27",
+                    "value": 11600,
+                    "received": 0,
+                    "pending": 11600,
+                    "vencimento": "2025-09-27",
+                    "class": "ead",
+                    "payments": []
+                },
+                {
+                    "entity": "SESI MT",
+                    "course": "EAD - GESTÃO E FISCALIZAÇÃO DE CONTRATOS",
+                    "ch": "16",
+                    "range": "03\/09\/2025 — 03\/09\/2025",
+                    "date_start": "2025-09-03",
+                    "date_end": "2025-09-03",
+                    "value": 11600,
+                    "received": 0,
+                    "pending": 11600,
+                    "vencimento": "2025-10-03",
+                    "class": "ead",
+                    "payments": []
+                }
+            ],
+            "total": 23200,
             "received": 0
+        },
+        {
+            "key": "pró-labore",
+            "name": "Pró-Labore",
+            "items": [
+                {
+                    "entity": "PRÓ-LABORE JML",
+                    "course": "OUTUBRO",
+                    "ch": "1",
+                    "range": "20\/10\/2025 — 20\/10\/2025",
+                    "date_start": "2025-10-20",
+                    "date_end": "2025-10-20",
+                    "value": 12000,
+                    "received": 12000,
+                    "pending": 0,
+                    "vencimento": "2025-10-20",
+                    "class": "pró-labore",
+                    "payments": [
+                        {
+                            "amount": 12000,
+                            "date": "2025-10-15",
+                            "inst_no": 1,
+                            "inst_total": 1
+                        }
+                    ]
+                },
+                {
+                    "entity": "PRÓ-LABORE JML",
+                    "course": "NOVEMBRO",
+                    "ch": "1",
+                    "range": "20\/11\/2025 — 20\/11\/2025",
+                    "date_start": "2025-11-20",
+                    "date_end": "2025-11-20",
+                    "value": 12000,
+                    "received": 0,
+                    "pending": 12000,
+                    "vencimento": "2025-11-20",
+                    "class": "pró-labore",
+                    "payments": []
+                },
+                {
+                    "entity": "PRÓ-LABORE JML",
+                    "course": "DEZEMBRO",
+                    "ch": "1",
+                    "range": "20\/12\/2025 — 20\/12\/2025",
+                    "date_start": "2025-12-20",
+                    "date_end": "2025-12-20",
+                    "value": 12000,
+                    "received": 0,
+                    "pending": 12000,
+                    "vencimento": "2025-12-20",
+                    "class": "pró-labore",
+                    "payments": []
+                },
+                {
+                    "entity": "PRÓ-LABORE JML",
+                    "course": "janeiro\/26",
+                    "ch": "1",
+                    "range": "20\/01\/2026 — 20\/01\/2026",
+                    "date_start": "2026-01-20",
+                    "date_end": "2026-01-20",
+                    "value": 12000,
+                    "received": 0,
+                    "pending": 12000,
+                    "vencimento": "2026-01-20",
+                    "class": "pró-labore",
+                    "payments": []
+                }
+            ],
+            "total": 48000,
+            "received": 12000
+        },
+        {
+            "key": "simples repasse",
+            "name": "Simples Repasse",
+            "items": [
+                {
+                    "entity": "PUC PR",
+                    "course": "-",
+                    "ch": "1",
+                    "range": "28\/08\/2025 — 28\/08\/2025",
+                    "date_start": "2025-08-28",
+                    "date_end": "2025-08-28",
+                    "value": 825.89,
+                    "received": 825.89,
+                    "pending": 0,
+                    "vencimento": "2025-09-28",
+                    "class": "simples repasse",
+                    "payments": [
+                        {
+                            "amount": 825.89,
+                            "date": "2025-10-20",
+                            "inst_no": 1,
+                            "inst_total": 1
+                        }
+                    ]
+                }
+            ],
+            "total": 825.89,
+            "received": 825.89
         }
     ],
     "installments": [
         {
-            "entity": "",
-            "course": "ALTERAÇÕES NO REGULAMENTO DE LICITAÇÕES E CONTRATOS DO SEBRAE",
-            "hon": 10000,
-            "due_date": "2022-02-31",
-            "amount": 202,
-            "status": "overdue"
-        },
-        {
-            "entity": "",
-            "course": "PLANO DE CONTRATAÇÃO ANUAL",
-            "hon": 0,
-            "due_date": "2022-02-31",
-            "amount": 202,
-            "status": "overdue"
-        },
-        {
-            "entity": "",
-            "course": "IN COMPANY ABERTO",
-            "hon": 6000,
-            "due_date": "2022-03-16",
-            "amount": 202,
-            "status": "overdue"
-        },
-        {
-            "entity": "",
-            "course": "ELABORAÇÃO DE EDITAIS E CONTRATOS ",
-            "hon": 2000,
-            "due_date": "2022-03-25",
-            "amount": 202,
-            "status": "overdue"
-        },
-        {
-            "entity": "",
-            "course": "A CONFECÇÃO DE ARTEFATOS PARA AS LICITAÇÕES DE SUCESSO - ESTUDO SOBRE ETP, TR E EDITAL - TURMA 01",
-            "hon": 4000,
-            "due_date": "2022-04-30",
-            "amount": 202,
-            "status": "overdue"
-        },
-        {
-            "entity": "",
-            "course": "A CONFECÇÃO DE ARTEFATOS PARA AS LICITAÇÕES DE SUCESSO - ESTUDO SOBRE ETP, TR E EDITAL - TURMA 01",
-            "hon": 4000,
-            "due_date": "2022-05-01",
-            "amount": 202,
-            "status": "overdue"
-        },
-        {
-            "entity": "",
-            "course": " EAD JML",
-            "hon": 4000,
-            "due_date": "2022-05-20",
-            "amount": 202,
-            "status": "overdue"
-        },
-        {
-            "entity": "",
-            "course": "FOCO II - CURSO 04 - CURSO COMPLETO DE GESTÃO E FISCALIZAÇÃO DE CONTRATOS ADM DO SISTEMA S - SENAC",
-            "hon": 4000,
-            "due_date": "2022-05-27",
-            "amount": 202,
-            "status": "overdue"
-        },
-        {
-            "entity": "",
-            "course": "TURMAS 1 E 2 - A NOVA LEI DE LICITAÇÕES",
-            "hon": 8000,
-            "due_date": "2022-06-28",
-            "amount": 202,
-            "status": "overdue"
-        },
-        {
-            "entity": "",
-            "course": "CONTRATAÇÃO DIRETA NA NOVA LEI DE LICITAÇÕES",
-            "hon": 3000,
-            "due_date": "2022-06-23",
-            "amount": 202,
-            "status": "overdue"
-        },
-        {
-            "entity": "",
-            "course": "A CONFECÇÃO DE ARTEFATOS PARA AS LICITAÇÕES DE SUCESSO - ESTUDO SOBRE ETP, TR E EDITAL - TURMA 01",
-            "hon": 4000,
-            "due_date": "2022-07-08",
-            "amount": 202,
-            "status": "overdue"
-        },
-        {
-            "entity": "",
-            "course": "A CONFECÇÃO DE ARTEFATOS PARA AS LICITAÇÕES DE SUCESSO - ESTUDO SOBRE ETP, TR E EDITAL - TURMA 01",
-            "hon": 4000,
-            "due_date": "2022-07-10",
-            "amount": 202,
-            "status": "overdue"
-        },
-        {
-            "entity": "",
-            "course": " NUCLEO S 2022",
-            "hon": 10000,
-            "due_date": "2022-07-23",
-            "amount": 202,
-            "status": "overdue"
-        },
-        {
-            "entity": "",
-            "course": "PLANEJAMENTO DAS CONTRATAÇÕES",
-            "hon": 6400,
-            "due_date": "2022-12-07",
-            "amount": 202,
-            "status": "overdue"
-        },
-        {
-            "entity": "",
-            "course": "SEMINÁRIO NACIONAL SISTEMA S:",
-            "hon": 6800,
-            "due_date": "2023-12-21",
-            "amount": 202,
-            "status": "overdue"
-        },
-        {
-            "entity": "",
-            "course": "NOVO REGULAMENTO",
-            "hon": 9600,
-            "due_date": "2024-02-25",
-            "amount": 202,
-            "status": "overdue"
-        },
-        {
-            "entity": "",
-            "course": "NOVO REGULAMENTO",
-            "hon": 9600,
-            "due_date": "2024-03-22",
-            "amount": 202,
-            "status": "overdue"
-        },
-        {
-            "entity": "",
-            "course": "TURMA 1",
-            "hon": 6400,
-            "due_date": "2024-03-09",
-            "amount": 202,
-            "status": "overdue"
-        },
-        {
-            "entity": "",
-            "course": "TURMA 2",
-            "hon": 6400,
-            "due_date": "2024-03-07",
-            "amount": 202,
-            "status": "overdue"
-        },
-        {
-            "entity": "",
-            "course": "NOVA LEGISLAÇÃO, IMPLICAÇÕES NAS LICITAÇÕES",
-            "hon": 9600,
-            "due_date": "2024-04-22",
-            "amount": 202,
-            "status": "overdue"
-        },
-        {
-            "entity": "",
-            "course": "EAD GRAVADO",
-            "hon": 25000,
-            "due_date": "2024-04-05",
-            "amount": 202,
-            "status": "overdue"
-        },
-        {
-            "entity": "",
-            "course": "NOTA TÉCNICA",
-            "hon": 9600,
-            "due_date": "2024-04-06",
-            "amount": 202,
-            "status": "overdue"
-        },
-        {
-            "entity": "",
-            "course": "NOVO REGULAMENTO DE LICITAÇÕES E CONTRATOS DO SESC E SENAC",
-            "hon": 9600,
-            "due_date": "2024-05-04",
-            "amount": 202,
-            "status": "overdue"
-        },
-        {
-            "entity": "",
-            "course": "NOVO REGULAMENTO DE LICITAÇÕES E CONTRATOS DO SESC E SENAC",
-            "hon": 9600,
-            "due_date": "2024-05-18",
-            "amount": 202,
-            "status": "overdue"
-        },
-        {
-            "entity": "",
-            "course": "NOVO REGULAMENTO",
-            "hon": 9600,
-            "due_date": "2024-06-09",
-            "amount": 202,
-            "status": "overdue"
-        },
-        {
-            "entity": "",
-            "course": "GESTÃO E FISCALIZAÇÃO",
-            "hon": 6400,
-            "due_date": "2024-06-29",
-            "amount": 202,
-            "status": "overdue"
-        },
-        {
-            "entity": "",
-            "course": "NOVO REGULAMENTO turmas 1 e 2",
-            "hon": 18000,
-            "due_date": "2024-07-07",
-            "amount": 202,
-            "status": "overdue"
-        },
-        {
-            "entity": "",
-            "course": "NOVO REGULAMENTO",
-            "hon": 16400,
-            "due_date": "2024-07-21",
-            "amount": 202,
-            "status": "overdue"
-        },
-        {
-            "entity": "",
-            "course": "TURMAS 01 E 02",
-            "hon": 18000,
-            "due_date": "2024-08-03",
-            "amount": 202,
-            "status": "overdue"
-        },
-        {
-            "entity": "",
-            "course": "PALESTRA Sensibilização para princípios gerais de contratações\nGoiânia - GO",
-            "hon": 2000,
-            "due_date": "2024-08-25",
-            "amount": 202,
-            "status": "overdue"
-        },
-        {
-            "entity": "",
-            "course": "GESTÃO E FISCALIZAÇÃO DE CONTRATOS",
-            "hon": 8000,
-            "due_date": "2024-09-16",
-            "amount": 202,
-            "status": "overdue"
-        },
-        {
-            "entity": "",
-            "course": "PLANEJAMENTO DAS CONTRATAÇÕES",
-            "hon": 10000,
-            "due_date": "2024-09-16",
-            "amount": 202,
-            "status": "overdue"
-        },
-        {
-            "entity": "",
-            "course": "NOVO REGULAMENTO DE LICITAÇÕES - PARA A COMISSÃO PERMANENTE DE LICITAÇÃO",
-            "hon": 2200,
-            "due_date": "2024-09-20",
-            "amount": 202,
-            "status": "overdue"
-        },
-        {
-            "entity": "",
-            "course": "PROCESSO DE SELEÇÃO E CONTRATAÇÃO DE ACORDO COM O NOVO REGULAMENTO DO SESI\/SENAI",
-            "hon": 13200,
-            "due_date": "2024-09-23",
-            "amount": 202,
-            "status": "overdue"
-        },
-        {
-            "entity": "",
-            "course": "PROCESSO DE SELEÇÃO E CONTRATAÇÃO DE ACORDO COM O NOVO REGULAMENTO DO SESI\/SENAI",
-            "hon": 13200,
-            "due_date": "2024-09-23",
-            "amount": 202,
-            "status": "overdue"
-        },
-        {
-            "entity": "",
-            "course": "O NOVO REGULAMENTO DE LICITAÇÕES E CONTRATOS DO SESC E SENAC",
-            "hon": 12000,
-            "due_date": "2024-10-26",
-            "amount": 202,
-            "status": "overdue"
-        },
-        {
-            "entity": "",
-            "course": "CURSO ABERTO",
-            "hon": 15000,
-            "due_date": "2024-11-18",
-            "amount": 202,
-            "status": "overdue"
-        },
-        {
-            "entity": "",
-            "course": "TURMA 01 - PLANEJAMENTO DAS CONTRATAÇÕES - ELABORAÇÃO DE TERMO DE REFERÊNCIA, PROJETO BÁSICO E ESTUDO TÉCNICO PRELIMINAR",
-            "hon": 18000,
-            "due_date": "2024-12-06",
-            "amount": 202,
-            "status": "overdue"
-        },
-        {
-            "entity": "",
-            "course": "TURMA 02 - GESTÃO E FISCALIZAÇÃO DE CONTRATOS",
-            "hon": 8000,
-            "due_date": "2024-12-08",
-            "amount": 202,
-            "status": "overdue"
-        },
-        {
-            "entity": "",
-            "course": "NOVO REGULAMENTO DE LICITAÇÕES E CONTRATOS DO SESC",
-            "hon": 12000,
-            "due_date": "2024-12-28",
-            "amount": 202,
-            "status": "overdue"
-        },
-        {
-            "entity": "",
-            "course": "GESTÃO E FISCALIZAÇÃO DE CONTRATOS BASEADOS NO REGULAMENTO INTERNO DE LICITAÇÕES E CONTRATOS DA FUNDAÇÃO PARQUE TECNOLÓGICO ITAIPU",
-            "hon": 8000,
-            "due_date": "2025-01-05",
-            "amount": 202,
-            "status": "overdue"
-        },
-        {
-            "entity": "",
+            "entity": "SENAC MT",
             "course": "Planejamento das Contratações e Gestão Contratual",
-            "hon": 12000,
-            "due_date": "2025-02-24",
-            "amount": 202,
-            "status": "overdue"
+            "amount": 12000,
+            "due_date": "2025-02-25",
+            "status": "paid",
+            "inst_no": 1,
+            "inst_total": 1
         },
         {
-            "entity": "",
+            "entity": "SENAR TO",
+            "course": "CONSULTORIA",
+            "amount": 1000,
+            "due_date": "2025-02-07",
+            "status": "paid",
+            "inst_no": 1,
+            "inst_total": 3
+        },
+        {
+            "entity": "SENAR TO",
+            "course": "CONSULTORIA",
+            "amount": 2000,
+            "due_date": "2025-02-14",
+            "status": "paid",
+            "inst_no": 2,
+            "inst_total": 3
+        },
+        {
+            "entity": "SENAR TO",
+            "course": "CONSULTORIA",
+            "amount": 3000,
+            "due_date": null,
+            "status": "paid",
+            "inst_no": 3,
+            "inst_total": 3
+        },
+        {
+            "entity": "SENAC RO",
             "course": "CURSO AVANÇADO - NOVO REGULAMENTO DE LICITAÇÕES E CONTRATOS",
-            "hon": 8000,
-            "due_date": "2025-03-05",
-            "amount": 202,
-            "status": "overdue"
+            "amount": 6000,
+            "due_date": "2025-03-11",
+            "status": "paid",
+            "inst_no": 1,
+            "inst_total": 2
         },
         {
-            "entity": "",
+            "entity": "SENAC RO",
+            "course": "CURSO AVANÇADO - NOVO REGULAMENTO DE LICITAÇÕES E CONTRATOS",
+            "amount": 2000,
+            "due_date": "2025-02-14",
+            "status": "paid",
+            "inst_no": 2,
+            "inst_total": 2
+        },
+        {
+            "entity": "SANEAGO",
             "course": "CURSO BASICO DE LICITACOES E CONTRATOS",
-            "hon": 18000,
-            "due_date": "2025-03-27",
-            "amount": 202,
-            "status": "overdue"
+            "amount": 10000,
+            "due_date": "2025-03-21",
+            "status": "paid",
+            "inst_no": 1,
+            "inst_total": 2
         },
         {
-            "entity": "",
+            "entity": "SANEAGO",
+            "course": "CURSO BASICO DE LICITACOES E CONTRATOS",
+            "amount": 8000,
+            "due_date": "2025-03-18",
+            "status": "paid",
+            "inst_no": 2,
+            "inst_total": 2
+        },
+        {
+            "entity": "CURSO ABERTO",
             "course": "INTELIGÊNCIA ARTIFICIAL APLICADA ÀS LICITAÇÕES E CONTRATAÇÕES DO SISTEMA S: TEORIA & PRÁTICA",
-            "hon": 2000,
-            "due_date": "2025-03-14",
-            "amount": 202,
-            "status": "overdue"
+            "amount": 2000,
+            "due_date": "2025-02-28",
+            "status": "paid",
+            "inst_no": 1,
+            "inst_total": 1
         },
         {
-            "entity": "",
+            "entity": "CURSO ABERTO",
             "course": "INTELIGÊNCIA ARTIFICIAL APLICADA ÀS LICITAÇÕES E CONTRATAÇÕES DO SISTEMA S: TEORIA & PRÁTICA - VERSÃO ONLINE",
-            "hon": 2000,
-            "due_date": "2025-03-19",
-            "amount": 202,
-            "status": "overdue"
+            "amount": 2000,
+            "due_date": "2025-03-28",
+            "status": "paid",
+            "inst_no": 1,
+            "inst_total": 1
         },
         {
-            "entity": "",
+            "entity": "APEX DF",
             "course": "DO PLANEJAMENTO DAS CONTRATAÇÕES À GESTÃO E FISCALIZAÇÃO DE CONTRATOS",
-            "hon": 16000,
-            "due_date": "2025-04-28",
-            "amount": 202,
-            "status": "overdue"
+            "amount": 10000,
+            "due_date": "2025-04-17",
+            "status": "paid",
+            "inst_no": 1,
+            "inst_total": 2
         },
         {
-            "entity": "",
+            "entity": "APEX DF",
+            "course": "DO PLANEJAMENTO DAS CONTRATAÇÕES À GESTÃO E FISCALIZAÇÃO DE CONTRATOS",
+            "amount": 6000,
+            "due_date": "2025-04-30",
+            "status": "paid",
+            "inst_no": 2,
+            "inst_total": 2
+        },
+        {
+            "entity": "CURSO ABERTO",
             "course": "CONTRATAÇÃO DE OBRAS E SERVIÇOS DE ENGENHARIA EM DIVERSOS REGIMES",
-            "hon": 6500,
-            "due_date": "2025-05-04",
-            "amount": 202,
-            "status": "overdue"
+            "amount": 6000,
+            "due_date": "2025-05-10",
+            "status": "paid",
+            "inst_no": 1,
+            "inst_total": 2
         },
         {
-            "entity": "",
+            "entity": "CURSO ABERTO",
+            "course": "CONTRATAÇÃO DE OBRAS E SERVIÇOS DE ENGENHARIA EM DIVERSOS REGIMES",
+            "amount": 500,
+            "due_date": "2025-05-15",
+            "status": "paid",
+            "inst_no": 2,
+            "inst_total": 2
+        },
+        {
+            "entity": "SENAC SC",
+            "course": "NOVO REGULAMENTO DE LICITAÇÕES E CONTRATOS DO SENAC",
+            "amount": 4500,
+            "due_date": "2025-05-15",
+            "status": "paid",
+            "inst_no": 1,
+            "inst_total": 4
+        },
+        {
+            "entity": "SENAC SC",
+            "course": "NOVO REGULAMENTO DE LICITAÇÕES E CONTRATOS DO SENAC",
+            "amount": 5000,
+            "due_date": "2025-05-19",
+            "status": "paid",
+            "inst_no": 2,
+            "inst_total": 4
+        },
+        {
+            "entity": "SENAC SC",
+            "course": "NOVO REGULAMENTO DE LICITAÇÕES E CONTRATOS DO SENAC",
+            "amount": 1000,
+            "due_date": "2025-07-11",
+            "status": "paid",
+            "inst_no": 3,
+            "inst_total": 4
+        },
+        {
+            "entity": "SENAC SC",
+            "course": "NOVO REGULAMENTO DE LICITAÇÕES E CONTRATOS DO SENAC",
+            "amount": 5000,
+            "due_date": "2025-10-10",
+            "status": "paid",
+            "inst_no": 4,
+            "inst_total": 4
+        },
+        {
+            "entity": "SENAC SC",
+            "course": "NOVO REGULAMENTO DE LICITAÇÕES E CONTRATOS DO SENAC",
+            "amount": 100,
+            "due_date": null,
+            "status": "pending"
+        },
+        {
+            "entity": "APEX DF",
             "course": "PALESTRA - BOAS PRÁTICAS NA ELABORAÇÃO DE TERMO DE REFERÊNCIA",
-            "hon": 2500,
-            "due_date": "2025-05-24",
-            "amount": 202,
-            "status": "overdue"
+            "amount": 2500,
+            "due_date": "2025-04-30",
+            "status": "paid",
+            "inst_no": 1,
+            "inst_total": 1
         },
         {
-            "entity": "",
+            "entity": "CURSO ABERTO",
             "course": "22ª NÚCLEO",
-            "hon": 18400,
-            "due_date": "2025-06-16",
-            "amount": 202,
-            "status": "overdue"
+            "amount": 8400,
+            "due_date": "2025-06-13",
+            "status": "paid",
+            "inst_no": 1,
+            "inst_total": 3
         },
         {
-            "entity": "",
+            "entity": "CURSO ABERTO",
+            "course": "22ª NÚCLEO",
+            "amount": 7000,
+            "due_date": "2025-07-27",
+            "status": "paid",
+            "inst_no": 2,
+            "inst_total": 3
+        },
+        {
+            "entity": "CURSO ABERTO",
+            "course": "22ª NÚCLEO",
+            "amount": 3000,
+            "due_date": "2025-07-11",
+            "status": "paid",
+            "inst_no": 3,
+            "inst_total": 3
+        },
+        {
+            "entity": "CURSO ABERTO",
             "course": "23ª NÚCLEO",
-            "hon": 12400,
-            "due_date": "2025-06-20",
-            "amount": 202,
-            "status": "overdue"
+            "amount": 12400,
+            "due_date": "2025-05-28",
+            "status": "paid",
+            "inst_no": 1,
+            "inst_total": 1
         },
         {
-            "entity": "",
+            "entity": "SENAC SC",
+            "course": "CONSULTORIA (JULIETA + ROBERTA)",
+            "amount": 9166.67,
+            "due_date": null,
+            "status": "paid",
+            "inst_no": 1,
+            "inst_total": 4
+        },
+        {
+            "entity": "SENAC SC",
+            "course": "CONSULTORIA (JULIETA + ROBERTA)",
+            "amount": 18333.33,
+            "due_date": null,
+            "status": "paid",
+            "inst_no": 2,
+            "inst_total": 4
+        },
+        {
+            "entity": "SENAC SC",
+            "course": "CONSULTORIA (JULIETA + ROBERTA)",
+            "amount": 12000,
+            "due_date": null,
+            "status": "paid",
+            "inst_no": 3,
+            "inst_total": 4
+        },
+        {
+            "entity": "SENAC SC",
+            "course": "CONSULTORIA (JULIETA + ROBERTA)",
+            "amount": 15500,
+            "due_date": null,
+            "status": "paid",
+            "inst_no": 4,
+            "inst_total": 4
+        },
+        {
+            "entity": "SESC PA",
             "course": "GESTÃO E FISCALIZAÇÃO DE CONTRATOS PARA O SISTEMA S",
-            "hon": 10000,
+            "amount": 10000,
             "due_date": "2025-07-05",
-            "amount": 202,
-            "status": "overdue"
+            "status": "paid",
+            "inst_no": 1,
+            "inst_total": 1
         },
         {
-            "entity": "",
+            "entity": "SESC PA",
             "course": "GESTÃO E FISCALIZAÇÃO DE CONTRATOS PARA O SISTEMA S",
-            "hon": 10000,
-            "due_date": "2025-07-05",
-            "amount": 202,
-            "status": "overdue"
+            "amount": 1500,
+            "due_date": null,
+            "status": "paid",
+            "inst_no": 1,
+            "inst_total": 4
         },
         {
-            "entity": "",
+            "entity": "SESC PA",
+            "course": "GESTÃO E FISCALIZAÇÃO DE CONTRATOS PARA O SISTEMA S",
+            "amount": 4000,
+            "due_date": null,
+            "status": "paid",
+            "inst_no": 2,
+            "inst_total": 4
+        },
+        {
+            "entity": "SESC PA",
+            "course": "GESTÃO E FISCALIZAÇÃO DE CONTRATOS PARA O SISTEMA S",
+            "amount": 2500,
+            "due_date": "2025-09-19",
+            "status": "paid",
+            "inst_no": 3,
+            "inst_total": 4
+        },
+        {
+            "entity": "SESC PA",
+            "course": "GESTÃO E FISCALIZAÇÃO DE CONTRATOS PARA O SISTEMA S",
+            "amount": 2000,
+            "due_date": "2025-10-15",
+            "status": "paid",
+            "inst_no": 4,
+            "inst_total": 4
+        },
+        {
+            "entity": "SESI MT",
             "course": "PLANEJAMENTO DAS CONTRATAÇÕES",
-            "hon": 9600,
-            "due_date": "2025-08-02",
-            "amount": 202,
-            "status": "overdue"
+            "amount": 9600,
+            "due_date": "2025-09-19",
+            "status": "paid",
+            "inst_no": 1,
+            "inst_total": 1
         },
         {
-            "entity": "",
+            "entity": "SESI MT",
             "course": "GESTÃO E FISCALIZAÇÃO DE CONTRATOS",
-            "hon": 9600,
-            "due_date": "2025-08-04",
-            "amount": 202,
-            "status": "overdue"
+            "amount": 6600,
+            "due_date": "2025-09-30",
+            "status": "paid",
+            "inst_no": 1,
+            "inst_total": 2
         },
         {
-            "entity": "",
+            "entity": "SESI MT",
+            "course": "GESTÃO E FISCALIZAÇÃO DE CONTRATOS",
+            "amount": 3000,
+            "due_date": "2025-10-15",
+            "status": "paid",
+            "inst_no": 2,
+            "inst_total": 2
+        },
+        {
+            "entity": "SESC ES",
             "course": "ESTUDO E RESOLUÇÃO DE CASOS PRÁTICOS PARA O APRIMORAMENTO DE GESTORES E FISCAIS",
-            "hon": 11200,
-            "due_date": "2025-09-20",
-            "amount": 202,
-            "status": "overdue"
+            "amount": 3000,
+            "due_date": "2025-10-15",
+            "status": "paid",
+            "inst_no": 1,
+            "inst_total": 1
         },
         {
-            "entity": "",
+            "entity": "SESC ES",
             "course": "ESTUDO E RESOLUÇÃO DE CASOS PRÁTICOS PARA O APRIMORAMENTO DE GESTORES E FISCAIS",
-            "hon": 11200,
+            "amount": 8200,
             "due_date": "2025-09-20",
-            "amount": 202,
             "status": "overdue"
         },
         {
-            "entity": "",
+            "entity": "SESC ES",
+            "course": "ESTUDO E RESOLUÇÃO DE CASOS PRÁTICOS PARA O APRIMORAMENTO DE GESTORES E FISCAIS",
+            "amount": 11200,
+            "due_date": "2025-09-20",
+            "status": "overdue"
+        },
+        {
+            "entity": "SESI MT",
             "course": "EAD - PLANEJAMENTO DAS CONTRATAÇÕES",
-            "hon": 11600,
+            "amount": 11600,
             "due_date": "2025-09-27",
-            "amount": 202,
             "status": "overdue"
         },
         {
-            "entity": "",
+            "entity": "SESI MT",
             "course": "EAD - GESTÃO E FISCALIZAÇÃO DE CONTRATOS",
-            "hon": 11600,
+            "amount": 11600,
             "due_date": "2025-10-03",
-            "amount": 202,
             "status": "overdue"
         },
         {
-            "entity": "",
+            "entity": "SENAC RO",
             "course": "CREDENCIAMENTO",
-            "hon": 5600,
+            "amount": 5600,
             "due_date": "2025-10-12",
-            "amount": 202,
             "status": "overdue"
         },
         {
-            "entity": "",
+            "entity": "SEBRAE SP",
             "course": "PLANEJAMENTO DAS CONTRATAÇÕES - ELABORAÇÃO DE ESTUDO TÉCNICO PRELIMINAR, PROJETO BÁSICO E TERMO DE REFERÊNCIA",
-            "hon": 14000,
+            "amount": 14000,
             "due_date": "2025-09-14",
-            "amount": 202,
             "status": "overdue"
         },
         {
-            "entity": "",
+            "entity": "SEBRAE BA",
             "course": "CURSO PRÁTICO PARA FORMAÇÃO E CAPACITAÇÃO DE FISCAIS E GESTORES DE CONTRATOS",
-            "hon": 14000,
+            "amount": 14000,
             "due_date": "2025-11-16",
-            "amount": 202,
+            "status": "pending"
+        },
+        {
+            "entity": "PUC PR",
+            "course": "-",
+            "amount": 825.89,
+            "due_date": "2025-10-20",
+            "status": "paid",
+            "inst_no": 1,
+            "inst_total": 1
+        },
+        {
+            "entity": "PRÓ-LABORE JML",
+            "course": "OUTUBRO",
+            "amount": 12000,
+            "due_date": "2025-10-15",
+            "status": "paid",
+            "inst_no": 1,
+            "inst_total": 1
+        },
+        {
+            "entity": "PRÓ-LABORE JML",
+            "course": "NOVEMBRO",
+            "amount": 12000,
+            "due_date": "2025-11-20",
+            "status": "pending"
+        },
+        {
+            "entity": "PRÓ-LABORE JML",
+            "course": "DEZEMBRO",
+            "amount": 12000,
+            "due_date": "2025-12-20",
+            "status": "pending"
+        },
+        {
+            "entity": "PRÓ-LABORE JML",
+            "course": "janeiro\/26",
+            "amount": 12000,
+            "due_date": "2026-01-20",
             "status": "pending"
         }
     ]
