@@ -31,29 +31,6 @@ function squash_spaces($s){
   $s = preg_replace('/\s+/u', ' ', $s);
   return trim($s);
 }
-
-function normalize_class_key($s){
-  $s = squash_spaces($s);
-  $s = remove_accents(mb_strtolower($s,'UTF-8'));
-  $s = str_replace(['-','_'],' ',$s);
-  $s = preg_replace('/\s+/u',' ',$s);
-  $s = trim($s);
-  if($s==='') return 'sem classificacao';
-  // mapeamentos
-  $map = [
-    'in company'       => 'incompany',
-    'incompany'        => 'incompany',
-    'curso aberto'     => 'curso aberto',
-    'consultoria'      => 'consultoria',
-    'ead'              => 'ead',
-    'pro labore'       => 'pro-labore',
-    'pro lab ore'      => 'pro-labore',
-    'pro-labore'       => 'pro-labore',
-    'simples repasse'  => 'simples repasse',
-  ];
-  return $map[$s] ?? $s;
-}
-
 /** Normaliza classificação para uma CHAVE canônica sem acento/espacos/hífens */
 function normalize_class_key($s){
   $s = squash_spaces($s);
