@@ -1,7 +1,7 @@
 {
-    "created_at": 1761080835,
+    "created_at": 1761164637,
     "kpis": {
-        "receivable": 112300,
+        "receivable": 100300,
         "received": 229325.89,
         "overdue": 62200
     },
@@ -702,23 +702,9 @@
                     "vencimento": "2025-12-20",
                     "class": "pró-labore",
                     "payments": []
-                },
-                {
-                    "entity": "PRÓ-LABORE JML",
-                    "course": "janeiro\/26",
-                    "ch": "1",
-                    "range": "20\/01\/2026 — 20\/01\/2026",
-                    "date_start": "2026-01-20",
-                    "date_end": "2026-01-20",
-                    "value": 12000,
-                    "received": 0,
-                    "pending": 12000,
-                    "vencimento": "2026-01-20",
-                    "class": "pró-labore",
-                    "payments": []
                 }
             ],
-            "total": 48000,
+            "total": 36000,
             "received": 12000
         },
         {
@@ -1162,13 +1148,6 @@
             "course": "DEZEMBRO",
             "amount": 12000,
             "due_date": "2025-12-20",
-            "status": "pending"
-        },
-        {
-            "entity": "PRÓ-LABORE JML",
-            "course": "janeiro\/26",
-            "amount": 12000,
-            "due_date": "2026-01-20",
             "status": "pending"
         }
     ]
