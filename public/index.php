@@ -99,8 +99,11 @@ $Q = [
   'q'         => trim($_GET['q'] ?? ''),
   'status'    => $_GET['status'] ?? 'all',   // all|pending|overdue|paid
   'month'     => trim($_GET['month'] ?? ''), // YYYY-MM
-  'due_in'    => (int)($_GET['due_in'] ?? 7), // 7|15|30
+  'due_in'    => (int)($_GET['due_in'] ?? 7),// 7|15|30
+  'mode'      => $_GET['mode'] ?? 'due',     // 'due' | 'period'
 ];
+$__allowedModes = ['due','period'];
+if (!in_array($Q['mode'], $__allowedModes, true)) $Q['mode'] = 'due';
 
 function qstr($overrides=[]){
   $params = $_GET;
@@ -114,12 +117,45 @@ $MONTH_NAMES = [
   1=>'Janeiro',2=>'Fevereiro',3=>'Março',4=>'Abril',5=>'Maio',6=>'Junho',
   7=>'Julho',8=>'Agosto',9=>'Setembro',10=>'Outubro',11=>'Novembro',12=>'Dezembro'
 ];
+
+/**
+ * Verifica se um mês (YYYY-MM) se sobrepõe ao período do curso (date_start/date_end).
+ * Retorna true se houver interseção.
+ */
+function month_overlaps_course(?string $ym, ?string $startIso, ?string $endIso): bool {
+  if (!$ym) return true;                         // sem mês -> não filtra
+  if (!$startIso && !$endIso) return false;      // sem datas -> fora em "period"
+  [$y,$m] = array_map('intval', explode('-', $ym));
+  $monthStart = sprintf('%04d-%02d-01', $y, $m);
+  $monthEnd   = date('Y-m-t', strtotime($monthStart)); // último dia do mês
+
+  $aStart = $startIso ?: $endIso;
+  $aEnd   = $endIso   ?: $startIso;
+
+  return !($aEnd < $monthStart || $aStart > $monthEnd);
+}
+
+
 function month_human($ym, $names){
   if(!$ym || strpos($ym, '-')===false) return $ym;
   [$y,$m] = explode('-',$ym);
   $m = (int)$m;
   $label = $names[$m] ?? $m;
   return $label.'-'.$y;
+}
+
+function status_label($status, $uppercase=false){
+  static $map = [
+    'pending' => 'Pendente',
+    'overdue' => 'Vencido',
+    'paid'    => 'Pago',
+  ];
+  $key = is_string($status) ? mb_strtolower($status, 'UTF-8') : '';
+  $label = $map[$key] ?? (string)$status;
+  if($uppercase){
+    return mb_strtoupper($label, 'UTF-8');
+  }
+  return $label;
 }
 
 // últimos 6 meses para chips de mês
@@ -163,7 +199,7 @@ if ($logged && isset($_GET['export']) && $_GET['export']==='csv') {
       $i['course'] ?? '',
       dmy($i['due_date'] ?? ''),
       number_format((float)($i['amount'] ?? 0), 2, ',', '.'),
-      $i['status'] ?? ''
+      status_label($i['status'] ?? '')
     ], ';');
   }
   fclose($out);
@@ -188,13 +224,35 @@ if($logged && !empty($data['entities'])){
       $matchesQ = $Q['q'] ? (mb_stripos(mb_strtolower(($e['name'] ?? '').' '.($it['course'] ?? ''),'UTF-8'), mb_strtolower($Q['q'],'UTF-8'))!==false) : true;
       if(!$matchesQ) continue;
 
-      // se tiver status/mês, só mostra cursos que aparecem nas parcelas filtradas
-      if($Q['status']!=='all' || $Q['month']){
-        $exists=false;
-        foreach($filteredInstallments as $pi){
-          if(($pi['entity']??'')===$e['name'] && ($pi['course']??'')===($it['course']??'')){ $exists=true; break; }
+      if ($Q['mode']==='due') {
+        // === MODO VENCIMENTO ===
+        // Com mês/status ativos, exigimos que exista ao menos uma parcela filtrada ligada ao curso
+        if($Q['status']!=='all' || $Q['month']){
+          $exists=false;
+          foreach($filteredInstallments as $pi){
+            if(($pi['entity']??'')===$e['name'] && ($pi['course']??'')===($it['course']??'')){ $exists=true; break; }
+          }
+          if(!$exists) continue;
         }
-        if(!$exists) continue;
+      } else {
+        // === MODO PERÍODO DO CURSO ===
+        // 1) se há month, exige sobreposição do mês com [date_start..date_end]
+        $startIso = $it['date_start'] ?? null;
+        $endIso   = $it['date_end'] ?? null;
+        if($Q['month']!==''){
+          if(!month_overlaps_course($Q['month'], $startIso, $endIso)) continue;
+        }
+
+        // 2) se há status, exige que exista parcela desse status (sem filtrar mês)
+        if($Q['status']!=='all'){
+          $hasStatus=false;
+          foreach($data['installments'] as $pi){
+            if(($pi['entity']??'')===$e['name'] && ($pi['course']??'')===($it['course']??'') && ($pi['status']??'')===$Q['status']){
+              $hasStatus=true; break;
+            }
+          }
+          if(!$hasStatus) continue;
+        }
       }
 
       [$courseTotal, $courseReceived, $coursePending] = course_financials($it);
@@ -270,20 +328,7 @@ $pctOvd=$base>0?min(100,round($overdue/$base*100)):0;
   background: rgba(30,41,59,0.4) !important;
   min-height: 6px !important;
   overflow: visible !important;
-}/* 1) Traga os blobs para cima do background do body */
-body.bgfx::before,
-body.bgfx::after{
-  z-index: 0 !important;   /* em vez de -2 */
 }
-
-/* 2) Garanta que o conteúdo fique acima dos blobs */
-body > *{
-  position: relative; 
-  z-index: 1;
-}
-
-/* (opcional) se quiser manter a “camada” dos blobs isolada */
-body.bgfx{ position: relative; z-index: 0; }
 
     
     @keyframes ios-in{
@@ -380,7 +425,7 @@ body.bgfx{ position: relative; z-index: 0; }
       <?php else: ?>
         <div class="list">
           <?php foreach($upcoming as $u): ?>
-            <div class="item" data-tip="<?= htmlspecialchars(($u['entity']??'').' - '.($u['course']??'').' - Venc.: '.dmy($u['due_date']??'').' - '.brl((float)($u['amount']??0)).' - '.strtoupper($u['status']??''), ENT_QUOTES, 'UTF-8') ?>">
+            <div class="item" data-tip="<?= htmlspecialchars(($u['entity']??'').' - '.($u['course']??'').' - Venc.: '.dmy($u['due_date']??'').' - '.brl((float)($u['amount']??0)).' - '.status_label($u['status']??'', true), ENT_QUOTES, 'UTF-8') ?>">
               <div class="top">
                 <div class="entity"><?= htmlspecialchars($u['entity'] ?? '', ENT_QUOTES, 'UTF-8') ?> — <?= htmlspecialchars($u['course'] ?? '', ENT_QUOTES, 'UTF-8') ?></div>
                 <div class="chips">
@@ -398,7 +443,7 @@ body.bgfx{ position: relative; z-index: 0; }
     <!-- LISTA DE ENTIDADES -->
     <div class="section-title section-title--row">
       <span>Entidades <?= $hasFilter ? '<small class="chip">filtrado</small>' : '' ?></span>
-      <div class="filters__group filters__group--inline">
+      <div class="filters__group">
         <span class="filters__label">Exibição</span>
         <div class="chips-line">
           <?php
@@ -414,6 +459,23 @@ body.bgfx{ position: relative; z-index: 0; }
 
     <!-- FILTERS -->
     <div class="filters filters--list">
+
+<!-- MODO -->
+<div class="filters__group">
+  <span class="filters__label">Modo</span>
+  <div class="chips-line">
+    <?php
+      $modes = ['due'=>'Vencimento', 'period'=>'Período do curso'];
+      foreach($modes as $k=>$lbl):
+        $active = $Q['mode']===$k ? 'is-active' : '';
+        $href = '?'.qstr(['mode'=>$k]);
+    ?>
+      <a class="chip chip--toggle <?= $active ?>" href="<?= $href ?>"><?= $lbl ?></a>
+    <?php endforeach; ?>
+  </div>
+</div>
+
+
       <!-- STATUS simples -->
       <div class="filters__group">
         <span class="filters__label">Status</span>
@@ -431,7 +493,10 @@ body.bgfx{ position: relative; z-index: 0; }
 
       <!-- MÊS -->
       <div class="filters__group">
-        <span class="filters__label">Mês</span>
+       <span class="filters__label">
+  <?= $Q['mode']==='period' ? 'Mês do curso' : 'Mês de vencimento' ?>
+</span>
+
         <div class="chips-line filters__chips">
           <?php
             $active = $Q['month']==='' ? 'is-active' : '';
@@ -448,6 +513,8 @@ body.bgfx{ position: relative; z-index: 0; }
       <!-- BUSCA -->
       <div class="filters__group filters__search">
         <form method="get" class="search">
+          <?php if($Q['mode']!=='due'): ?>
+          <input type="hidden" name="mode" value="<?= htmlspecialchars($Q['mode'], ENT_QUOTES, 'UTF-8') ?>"><?php endif; ?>
           <?php if($Q['status']!=='all'): ?><input type="hidden" name="status" value="<?= htmlspecialchars($Q['status'], ENT_QUOTES, 'UTF-8') ?>"><?php endif; ?>
           <?php if($Q['month']!==''): ?><input type="hidden" name="month" value="<?= htmlspecialchars($Q['month'], ENT_QUOTES, 'UTF-8') ?>"><?php endif; ?>
           <input class="input" type="search" name="q" value="<?= htmlspecialchars($Q['q'], ENT_QUOTES, 'UTF-8') ?>" placeholder="Buscar entidade/curso…">
@@ -487,10 +554,12 @@ body.bgfx{ position: relative; z-index: 0; }
             $coursePct = $courseTotal > 0 ? min(100, round(($courseReceived / $courseTotal) * 100)) : 0;
 
             $chips = [];
-            if ($Q['status']!=='all') $chips[] = strtoupper($Q['status']);
-            if ($Q['month']!=='')     $chips[] = month_human($Q['month'],$MONTH_NAMES);
+            if ($Q['status']!=='all') $chips[] = status_label($Q['status'], true);
+            if ($Q['month']!=='') {
+              $chips[] = ($Q['mode']==='period' ? 'Período: ' : 'Venc.: ') . month_human($Q['month'],$MONTH_NAMES);
+            }
 
-            $nextTs   = next_due_for_course($e['name'] ?? '-', $it['course'] ?? '-', $filteredInstallments);
+            $nextTs   = next_due_for_course($e['name'] ?? '-', $it['course'] ?? '-', $data['installments']);
             $nextLabel= $nextTs ? date('d/m/Y', $nextTs) : null;
             $isLongCourse = mb_strlen($it['course'] ?? '', 'UTF-8') > 65;
             $itemClass = 'list-item js-course'.($isLongCourse ? ' list-item--long' : '');
@@ -561,7 +630,7 @@ body.bgfx{ position: relative; z-index: 0; }
             [$entTotal, $entReceived, $entPending] = entity_financials($e['items'] ?? []);
             $pct = $entTotal > 0 ? min(100, round(($entReceived / $entTotal) * 100)) : 0;
           ?>
-          <details open>
+          <details>
             <summary>
               <div class="entity js-entity" data-entity="<?= htmlspecialchars($e['name'] ?? '-', ENT_QUOTES, 'UTF-8') ?>">
                 <?= htmlspecialchars($e['name'] ?? '-', ENT_QUOTES, 'UTF-8') ?>
@@ -585,7 +654,7 @@ body.bgfx{ position: relative; z-index: 0; }
                 $coursePct      = $courseTotal > 0 ? min(100, round(($courseReceived / $courseTotal) * 100)) : 0;
 
                 // próxima data não paga
-                $nextTs = next_due_for_course($e['name'] ?? '-', $it['course'] ?? '-', $filteredInstallments);
+                $nextTs = next_due_for_course($e['name'] ?? '-', $it['course'] ?? '-', $data['installments']);
                 $nextLabel = $nextTs ? date('d/m/Y', $nextTs) : null;
 
                 $tipParts = array_filter([
@@ -599,8 +668,10 @@ body.bgfx{ position: relative; z-index: 0; }
 
                 // chips de status/mês (do filtro atual) à direita
                 $chips = [];
-                if ($Q['status']!=='all') $chips[] = strtoupper($Q['status']);
-                if ($Q['month']!=='')     $chips[] = month_human($Q['month'],$MONTH_NAMES);
+                if ($Q['status']!=='all') $chips[] = status_label($Q['status'], true);
+                if ($Q['month']!=='') {
+                  $chips[] = ($Q['mode']==='period' ? 'Período: ' : 'Venc.: ') . month_human($Q['month'],$MONTH_NAMES);
+                }
 
                 // labels de datas com texto explícito
                 $di = $it['date_start'] ? dmy($it['date_start']) : '—';
@@ -665,29 +736,46 @@ body.bgfx{ position: relative; z-index: 0; }
         <button id="modalClose" class="btn" type="button" title="Fechar">✕</button>
       </div>
       <div class="modal__body">
-        <div class="card" style="margin-bottom:14px">
+        <div class="config-card">
           <h4>Tema</h4>
-          <div class="opt">
-            <label><input type="radio" name="theme" value="dark"> Dark</label>
-            <label><input type="radio" name="theme" value="light"> Light</label>
+          <div class="theme-toggle" data-active="light" role="radiogroup" aria-label="Tema de cor">
+            <label class="theme-toggle__option">
+              <input type="radio" name="theme" value="dark">
+              <span class="theme-toggle__label">
+                <span aria-hidden="true" class="theme-toggle__icon">☾</span>
+                <span>Dark</span>
+              </span>
+            </label>
+            <label class="theme-toggle__option">
+              <input type="radio" name="theme" value="light">
+              <span class="theme-toggle__label">
+                <span aria-hidden="true" class="theme-toggle__icon">☀</span>
+                <span>Light</span>
+              </span>
+            </label>
+            <span class="theme-toggle__indicator" aria-hidden="true"></span>
           </div>
         </div>
 
-        <div class="card">
+        <div class="config-card">
           <h4>Cor de destaque</h4>
           <div class="hue">
-            <div class="hue__track"></div>
-            <input id="hue" type="range" min="0" max="360" step="1">
+            <div class="hue-picker" id="huePicker">
+              <input id="hue" type="range" min="0" max="360" step="1" aria-label="Selecionar matiz">
+              <span class="hue-picker__thumb" id="hueThumb">
+                <span class="hue-picker__value" id="hueValue">160°</span>
+              </span>
+            </div>
             <div class="hue__swatches">
               <?php foreach([145,200,260,300,20,60,100] as $h): ?>
-                <div class="swatch" data-h="<?= (int)$h ?>" style="background:hsl(<?= (int)$h ?> 85% 55%)"></div>
+                <button type="button" class="swatch" data-h="<?= (int)$h ?>" style="--swatch-h:<?= (int)$h ?>"></button>
               <?php endforeach; ?>
-              <div id="hueNow" class="swatch" title="Atual" style="box-shadow:0 0 0 2px #fff6, inset 0 0 0 2px #0002"></div>
+              <div id="hueNow" class="swatch swatch--current" title="Atual"></div>
             </div>
           </div>
         </div>
 
-        <div class="sub" style="margin-top:10px">Última sync: <?= htmlspecialchars($ultimaSync, ENT_QUOTES, 'UTF-8') ?></div>
+        <div class="sub config-card__foot">Última sync: <?= htmlspecialchars($ultimaSync, ENT_QUOTES, 'UTF-8') ?></div>
       </div>
     </div>
   </div>
@@ -718,6 +806,11 @@ body.bgfx{ position: relative; z-index: 0; }
 
   // datasets
   var datasetAll=[], filteredInstallments=[], entityDataset=[], entityMap={};
+  var STATUS_LABELS = { pending: 'PENDENTE', overdue: 'VENCIDO', paid: 'PAGO' };
+  function statusLabel(value){
+    var key = typeof value === 'string' ? value.toLowerCase() : '';
+    return STATUS_LABELS[key] || String(value || '').toUpperCase();
+  }
   function safeParseJSON(elId){
     var el=document.getElementById(elId);
     if(!el||!el.textContent) return null;
@@ -764,6 +857,29 @@ body.bgfx{ position: relative; z-index: 0; }
   }
 
   // === Tema persistente ===
+  var themeToggleEl = document.querySelector('.theme-toggle');
+  var huePickerEl   = document.getElementById('huePicker');
+  var hueThumbEl    = document.getElementById('hueThumb');
+  var hueValueEl    = document.getElementById('hueValue');
+  var hueCurrentEl  = document.getElementById('hueNow');
+  var hueInp        = document.getElementById('hue');
+
+  function updateThemeToggle(theme){
+    if(!themeToggleEl) return;
+    themeToggleEl.dataset.active = (theme === 'dark') ? 'dark' : 'light';
+  }
+
+  function updateHueUI(h){
+    if(!huePickerEl) return;
+    var hue = Math.max(0, Math.min(360, Number(h) || 0));
+    var pct = hue / 360 * 100;
+    huePickerEl.style.setProperty('--pos', pct + '%');
+    huePickerEl.style.setProperty('--hue', hue);
+    if(hueValueEl) hueValueEl.textContent = Math.round(hue) + '°';
+    if(hueThumbEl) hueThumbEl.setAttribute('aria-label', 'Matiz ' + Math.round(hue));
+    if(hueCurrentEl) hueCurrentEl.style.background = 'hsl(' + hue + ' 85% 55%)';
+  }
+
   function setTheme(t){
     if(!t) t='dark';
     if(t!=='dark' && t!=='light'){ t='dark'; try{ localStorage.setItem('julieta:theme','dark'); }catch(e){} }
@@ -777,14 +893,16 @@ body.bgfx{ position: relative; z-index: 0; }
       var radios=document.querySelectorAll('input[name="theme"]');
       Array.prototype.forEach.call(radios, function(r){ r.checked = (r.value===t); });
     }catch(e){}
+    updateThemeToggle(t);
   }
   function setHue(h){
-    h = String(h||'145');
-    root.style.setProperty('--accent-h', h);
-    try{ localStorage.setItem('julieta:hue', h);}catch(e){}
-    var hueInp=document.getElementById('hue'), hueNow=document.getElementById('hueNow');
-    if(hueInp) hueInp.value=h;
-    if(hueNow) hueNow.style.background='hsl('+h+' 85% 55%)';
+    var hueNum = Math.max(0, Math.min(360, Number(h)));
+    if(isNaN(hueNum)) hueNum = 145;
+    var hueStr = String(hueNum);
+    root.style.setProperty('--accent-h', hueStr);
+    try{ localStorage.setItem('julieta:hue', hueStr);}catch(e){}
+    if(hueInp) hueInp.value=hueStr;
+    updateHueUI(hueStr);
   }
   try{ setTheme((localStorage.getItem('julieta:theme')||'dark')); }catch(e){ setTheme('dark'); }
   try{
@@ -805,12 +923,34 @@ body.bgfx{ position: relative; z-index: 0; }
   var modal=document.getElementById('modal');
   var openB=document.getElementById('btnConfig');
   var closeB=document.getElementById('modalClose');
-  if(openB) openB.addEventListener('click', function(){ if(modal && !modal.classList.contains('modal--open')){ modal.classList.add('modal--open'); body.classList.add('no-scroll'); }});
-  if(closeB) closeB.addEventListener('click', function(){ if(modal && modal.classList.contains('modal--open')){ modal.classList.remove('modal--open'); body.classList.remove('no-scroll'); }});
-  if(modal){ modal.addEventListener('click', function(e){ if(e.target===modal){ modal.classList.remove('modal--open'); body.classList.remove('no-scroll'); } }); }
+  var modalTimer=null;
+  var MODAL_ANIM_MS = 380;
+  function openModal(){
+    if(!modal) return;
+    if(modalTimer){ clearTimeout(modalTimer); modalTimer=null; }
+    modal.classList.remove('modal--closing');
+    modal.classList.add('modal--open');
+    modal.setAttribute('aria-hidden','false');
+    body.classList.add('no-scroll');
+  }
+  function closeModal(){
+    if(!modal || !modal.classList.contains('modal--open')) return;
+    modal.classList.add('modal--closing');
+    modal.setAttribute('aria-hidden','true');
+    body.classList.remove('no-scroll');
+    if(modalTimer){ clearTimeout(modalTimer); }
+    modalTimer = setTimeout(function(){
+      modal.classList.remove('modal--open');
+      modal.classList.remove('modal--closing');
+      modalTimer = null;
+    }, MODAL_ANIM_MS);
+  }
+  if(modal && !modal.hasAttribute('aria-hidden')) modal.setAttribute('aria-hidden','true');
+  if(openB) openB.addEventListener('click', openModal);
+  if(closeB) closeB.addEventListener('click', closeModal);
+  if(modal){ modal.addEventListener('click', function(e){ if(e.target===modal){ closeModal(); } }); }
 
   // hue
-  var hueInp=document.getElementById('hue');
   if(hueInp) hueInp.addEventListener('input', function(e){ setHue(e.target.value); });
   var sw = document.querySelectorAll('.swatch[data-h]');
   for(var i=0;i<sw.length;i++){ sw[i].addEventListener('click', function(){ setHue(this.getAttribute('data-h')); }); }
@@ -987,7 +1127,7 @@ body.bgfx{ position: relative; z-index: 0; }
       });
       var timeline = relInst.map(function(item){
         var d=safeDate(item.due_date); var when=d? d.toLocaleDateString("pt-BR") : "-";
-        var label=[item.course||"", String(item.status||"").toUpperCase()].filter(Boolean).join(" - ");
+        var label=[item.course||"", statusLabel(item.status)].filter(Boolean).join(" - ");
         return '<div class="info-line"><div><strong>'+when+'</strong><span>'+esc(label)+'</span></div><span class="tag">'+formatBRL(item.amount)+'</span></div>';
       }).join('');
       var timelineHtml = timeline
@@ -1073,7 +1213,7 @@ refreshNavControls(); // atualiza controles de navegação
 
   var lines = relInst.map(function(item){
     var when   = item.due_date ? new Date(item.due_date).toLocaleDateString('pt-BR') : '-';
-    var status = String(item.status||'').toUpperCase();
+    var status = statusLabel(item.status);
     var chip   = '';
     // se vierem inst_no/inst_total, mostra a “bolacha” da parcela
     if (typeof item.inst_no === 'number') {
@@ -1261,7 +1401,7 @@ refreshNavControls(); // atualiza controles de navegação
   // ESC fecha modal/drawer
   window.addEventListener('keydown',function(e){
     if(e.key==='Escape'){
-      if(modal && modal.classList.contains('modal--open')){ modal.classList.remove('modal--open'); body.classList.remove('no-scroll'); }
+      if(modal && modal.classList.contains('modal--open')){ closeModal(); }
       closeDrawer();
     }
   });
@@ -1269,7 +1409,6 @@ refreshNavControls(); // atualiza controles de navegação
 </script>
 </body>
 </html>
-
 
 
 
