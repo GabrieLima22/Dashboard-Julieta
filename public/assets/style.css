@@ -1179,7 +1179,8 @@ body.bgfx::after{
   width: calc(100% - 16px);
   height: calc(100% - 16px);
   object-fit: cover;
-  object-position: 38% 18%;
+  object-position: 50% 30%;
   border-radius: inherit;
   display: block;
 }
+
