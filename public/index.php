@@ -224,17 +224,26 @@ if($logged && !empty($data['entities'])){
       $matchesQ = $Q['q'] ? (mb_stripos(mb_strtolower(($e['name'] ?? '').' '.($it['course'] ?? ''),'UTF-8'), mb_strtolower($Q['q'],'UTF-8'))!==false) : true;
       if(!$matchesQ) continue;
 
-      if ($Q['mode']==='due') {
-        // === MODO VENCIMENTO ===
-        // Com mês/status ativos, exigimos que exista ao menos uma parcela filtrada ligada ao curso
-        if($Q['status']!=='all' || $Q['month']){
-          $exists=false;
-          foreach($filteredInstallments as $pi){
-            if(($pi['entity']??'')===$e['name'] && ($pi['course']??'')===($it['course']??'')){ $exists=true; break; }
-          }
-          if(!$exists) continue;
-        }
-      } else {
+  if ($Q['mode']==='due') {
+  // === MODO VENCIMENTO (filtra diretamente em $data['installments']) ===
+  $exists = false;
+  foreach ($data['installments'] as $pi) {
+    if (($pi['entity'] ?? '-') === ($it['entity'] ?? '-') && ($pi['course'] ?? '-') === ($it['course'] ?? '-')) {
+      // status (se selecionado)
+      if ($Q['status'] !== 'all' && ($pi['status'] ?? '') !== $Q['status']) {
+        continue;
+      }
+      // mês (se selecionado)
+      if ($Q['month'] !== '' && substr($pi['due_date'] ?? '', 0, 7) !== $Q['month']) {
+        continue;
+      }
+      $exists = true;
+      break;
+    }
+  }
+  if (!$exists) continue;
+} else {
+
         // === MODO PERÍODO DO CURSO ===
         // 1) se há month, exige sobreposição do mês com [date_start..date_end]
         $startIso = $it['date_start'] ?? null;
@@ -559,7 +568,8 @@ $pctOvd=$base>0?min(100,round($overdue/$base*100)):0;
               $chips[] = ($Q['mode']==='period' ? 'Período: ' : 'Venc.: ') . month_human($Q['month'],$MONTH_NAMES);
             }
 
-            $nextTs   = next_due_for_course($e['name'] ?? '-', $it['course'] ?? '-', $data['installments']);
+         $nextTs   = next_due_for_course($it['entity'] ?? '-', $it['course'] ?? '-', $data['installments']);
+
             $nextLabel= $nextTs ? date('d/m/Y', $nextTs) : null;
             $isLongCourse = mb_strlen($it['course'] ?? '', 'UTF-8') > 65;
             $itemClass = 'list-item js-course'.($isLongCourse ? ' list-item--long' : '');
@@ -654,7 +664,8 @@ $pctOvd=$base>0?min(100,round($overdue/$base*100)):0;
                 $coursePct      = $courseTotal > 0 ? min(100, round(($courseReceived / $courseTotal) * 100)) : 0;
 
                 // próxima data não paga
-                $nextTs = next_due_for_course($e['name'] ?? '-', $it['course'] ?? '-', $data['installments']);
+              $nextTs = next_due_for_course($it['entity'] ?? '-', $it['course'] ?? '-', $data['installments']);
+
                 $nextLabel = $nextTs ? date('d/m/Y', $nextTs) : null;
 
                 $tipParts = array_filter([
@@ -836,11 +847,20 @@ $pctOvd=$base>0?min(100,round($overdue/$base*100)):0;
   });
   function findEntity(name){ return entityMap[name] || null; }
 
-  function collectEntityDetail(name){
-    var ent = findEntity(name);
-    var rel = (datasetAll||[]).filter(function(item){ return (item.entity||'') === name; }); // usa ALL para ver tudo
-    return { entity: ent, name: name, installments: rel };
+function collectEntityDetail(name){
+  var ent = findEntity(name); // 'name' aqui é a classificação
+  var pairs = new Set();
+  if (ent && Array.isArray(ent.items)) {
+    ent.items.forEach(function(it){
+      pairs.add(String(it.entity||'-') + '|' + String(it.course||'-'));
+    });
   }
+  var rel = (datasetAll||[]).filter(function(i){
+    return pairs.has(String(i.entity||'-') + '|' + String(i.course||'-'));
+  });
+  return { entity: ent, name: name, installments: rel };
+}
+  
   function collectCourseDetail(entityName, courseName){
     var ent = findEntity(entityName);
     var courseInfo = null;
