@@ -243,26 +243,48 @@ if($logged && !empty($data['entities'])){
   }
   if (!$exists) continue;
 } else {
+  // === MODO PERÍODO DO CURSO ===
 
-        // === MODO PERÍODO DO CURSO ===
-        // 1) se há month, exige sobreposição do mês com [date_start..date_end]
-        $startIso = $it['date_start'] ?? null;
-        $endIso   = $it['date_end'] ?? null;
-        if($Q['month']!==''){
-          if(!month_overlaps_course($Q['month'], $startIso, $endIso)) continue;
-        }
+  // 1) se há month, exige sobreposição do mês com [date_start..date_end]
+  $startIso = $it['date_start'] ?? null;
+  $endIso   = $it['date_end'] ?? null;
+  if ($Q['month'] !== '') {
+    if (!month_overlaps_course($Q['month'], $startIso, $endIso)) {
+      continue; // não cruza com o mês selecionado
+    }
+  }
 
-        // 2) se há status, exige que exista parcela desse status (sem filtrar mês)
-        if($Q['status']!=='all'){
-          $hasStatus=false;
-          foreach($data['installments'] as $pi){
-            if(($pi['entity']??'')===$e['name'] && ($pi['course']??'')===($it['course']??'') && ($pi['status']??'')===$Q['status']){
-              $hasStatus=true; break;
-            }
-          }
-          if(!$hasStatus) continue;
-        }
+  // 2) se há status, exige que exista ao menos UMA parcela com esse status
+  if ($Q['status'] !== 'all') {
+    $hasStatus = false;
+    foreach ($data['installments'] as $pi) {
+      if (
+        ($pi['entity'] ?? '') === ($it['entity'] ?? '') &&
+        ($pi['course'] ?? '') === ($it['course'] ?? '') &&
+        ($pi['status'] ?? '') === $Q['status']
+      ) {
+        $hasStatus = true;
+        break;
       }
+    }
+    if (!$hasStatus) continue;
+  }
+}
+
+
+      // 2) se há status, exige que exista parcela desse status (sem filtrar mês)
+if ($Q['status'] !== 'all') {
+  $hasStatus = false;
+  foreach ($data['installments'] as $pi) {
+    if (
+      ($pi['entity'] ?? '') === ($it['entity'] ?? '') &&
+      ($pi['course'] ?? '') === ($it['course'] ?? '') &&
+      ($pi['status'] ?? '') === $Q['status']
+    ) { $hasStatus = true; break; }
+  }
+  if (!$hasStatus) continue;
+}
+
 
       [$courseTotal, $courseReceived, $coursePending] = course_financials($it);
       $normalizedItem = $it;
@@ -338,10 +360,6 @@ $pctOvd=$base>0?min(100,round($overdue/$base*100)):0;
   min-height: 6px !important;
   overflow: visible !important;
 }
- 
-  :root{ --hero-size: 150px; }
-  .hero{ grid-template-columns: var(--hero-size) minmax(0,1fr) auto !important; }
-
 
     
     @keyframes ios-in{
@@ -565,6 +583,14 @@ $pctOvd=$base>0?min(100,round($overdue/$base*100)):0;
           <?php foreach($e['items'] as $it):
             [$courseTotal, $courseReceived, $coursePending] = course_financials($it);
             $coursePct = $courseTotal > 0 ? min(100, round(($courseReceived / $courseTotal) * 100)) : 0;
+$tip = htmlspecialchars(
+  ($it['entity'] ?? '-') . ' - ' . ($it['course'] ?? '-') .
+  ' - Total ' . brl($courseTotal) .
+  ' - Recebidos ' . brl($courseReceived) .
+  ' - Falta ' . brl($coursePending),
+  ENT_QUOTES,
+  'UTF-8'
+);
 
             $chips = [];
             if ($Q['status']!=='all') $chips[] = status_label($Q['status'], true);
@@ -578,9 +604,14 @@ $pctOvd=$base>0?min(100,round($overdue/$base*100)):0;
             $isLongCourse = mb_strlen($it['course'] ?? '', 'UTF-8') > 65;
             $itemClass = 'list-item js-course'.($isLongCourse ? ' list-item--long' : '');
           ?>
-            <div class="<?= $itemClass ?>"
-                 data-entity="<?= htmlspecialchars($e['name'] ?? '-', ENT_QUOTES, 'UTF-8') ?>"
-                 data-course="<?= htmlspecialchars($it['course'] ?? '-', ENT_QUOTES, 'UTF-8') ?>">
+           <div class="<?= $itemClass ?>"
+     data-entity="<?= htmlspecialchars($it['entity'] ?? '-', ENT_QUOTES, 'UTF-8') ?>"
+     data-course="<?= htmlspecialchars($it['course'] ?? '-', ENT_QUOTES, 'UTF-8') ?>"
+     
+     data-tip="<?= $tip ?>">
+     
+
+
               <div class="list-item__body">
                 <div class="list-item__course">
                   <div class="list-item__meta">
@@ -696,7 +727,11 @@ $pctOvd=$base>0?min(100,round($overdue/$base*100)):0;
                  $isLongCourse = mb_strlen($it['course'] ?? '', 'UTF-8') > 65;
                  $itemClass = 'list-item js-course'.($isLongCourse ? ' list-item--long' : '');
               ?>
-                <div class="<?= $itemClass ?>" data-entity="<?= htmlspecialchars($e['name'] ?? '-', ENT_QUOTES, 'UTF-8') ?>" data-course="<?= htmlspecialchars($it['course'] ?? '-', ENT_QUOTES, 'UTF-8') ?>" data-tip="<?= $tip ?>">
+               <div class="<?= $itemClass ?>"
+     data-entity="<?= htmlspecialchars($it['entity'] ?? '-', ENT_QUOTES, 'UTF-8') ?>"
+     data-course="<?= htmlspecialchars($it['course'] ?? '-', ENT_QUOTES, 'UTF-8') ?>"
+     data-tip="<?= $tip ?>">
+
                   <div class="list-item__body">
                     <div class="list-item__course">
                      <div class="list-item__meta">
@@ -864,21 +899,30 @@ function collectEntityDetail(name){
   });
   return { entity: ent, name: name, installments: rel };
 }
-  
   function collectCourseDetail(entityName, courseName){
-    var ent = findEntity(entityName);
-    var courseInfo = null;
-    if(ent && Array.isArray(ent.items)){
-      for(var i=0;i<ent.items.length;i++){
+  // procura meta do curso percorrendo todas as classificações
+  var courseInfo = null;
+  for (var k = 0; k < entityDataset.length; k++) {
+    var ent = entityDataset[k];
+    if (ent && Array.isArray(ent.items)) {
+      for (var i = 0; i < ent.items.length; i++) {
         var itm = ent.items[i];
-        if((itm.course||'') === courseName){ courseInfo = itm; break; }
+        if ((String(itm.entity||'-') === String(entityName||'-')) &&
+            (String(itm.course||'-') === String(courseName||'-'))) {
+          courseInfo = itm;
+          break;
+        }
       }
+      if (courseInfo) break;
     }
-    var rel = (datasetAll||[]).filter(function(item){
-      return (item.entity||'') === entityName && (item.course||'') === courseName;
-    });
-    return { entityName: entityName, courseName: courseName, course: courseInfo, installments: rel };
   }
+  // parcelas relacionadas (já estava ok)
+  var rel = (datasetAll||[]).filter(function(item){
+    return (item.entity||'') === entityName && (item.course||'') === courseName;
+  });
+  return { entityName: entityName, courseName: courseName, course: courseInfo, installments: rel };
+}
+
 
   // === Tema persistente ===
   var themeToggleEl = document.querySelector('.theme-toggle');
@@ -1433,13 +1477,3 @@ refreshNavControls(); // atualiza controles de navegação
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
