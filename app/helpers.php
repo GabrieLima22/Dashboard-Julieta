@@ -223,8 +223,8 @@ function money_to_float($s){
 /** Exibe ISO em formato BR */
 function dmy($iso){
   if(!$iso) return '-';
-  $ts = strtotime($iso);
-  return $ts ? date('d/m/Y',$ts) : '-';
+  $dt = DateTimeImmutable::createFromFormat('!Y-m-d', $iso);
+  return $dt ? $dt->format('d/m/Y') : '-';
 }
 
 function brl($v){ return 'R$ '.number_format((float)$v, 2, ',', '.'); }
@@ -587,3 +587,4 @@ function save_settings($in){
   @file_put_contents(_settings_path(), json_encode($s, JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT));
   return $s;
 }
+
