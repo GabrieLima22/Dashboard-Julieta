@@ -1183,3 +1183,33 @@ body.bgfx::after{
   border-radius: inherit;
   display: block;
 }
+
+/* 1) Coluna do herói (onde fica a foto) */
+.hero{
+  grid-template-columns: 160px minmax(0,1fr) auto; /* era 120px */
+}
+
+/* 2) Tamanho do quadro */
+.hero__art{
+  width: 160px;   /* era 120px */
+  height: 160px;  /* era 120px */
+}
+
+/* 3) Bloco verde interno */
+.hero__orb{
+  width: 128px;   /* era 88px */
+  height: 128px;  /* era 88px */
+  border-radius: 32px; /* opcional: deixa o canto proporcional */
+}
+
+/* (opcional) garante que a imagem preencha bem o quadro */
+.hero__art img{
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* ou cover, se quiser “cortar” um pouco pra preencher */
+  border-radius: 30px; /* combina com o estilo do quadro */
+}
+
+/* (opcional) esconder as iniciais “JML” se ainda aparecerem */
+.hero__initials{ display:none; }
+
