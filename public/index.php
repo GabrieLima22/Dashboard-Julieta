@@ -329,6 +329,7 @@ $pctOvd=$base>0?min(100,round($overdue/$base*100)):0;
   <title><?= htmlspecialchars($cfg['APP_NAME'] ?? 'App', ENT_QUOTES, 'UTF-8') ?></title>
   <link rel="stylesheet" href="./assets/style.css?v=2025-10-23">
 
+
   <!-- HOTFIXES/OVERRIDES (sem tocar no style.css) -->
   <style>
     /* 1) sem rolagem horizontal no drawer */
@@ -368,30 +369,7 @@ $pctOvd=$base>0?min(100,round($overdue/$base*100)):0;
       100%{ transform:translateX(0) scale(1); opacity:1; }
       
     }
-
-  /* HOTFIX Julieta: garante tamanho e recorte iguais em prod */
-  :root{
-    --hero-size: 132px;   /* ajuste aqui se quiser maior/menor */
-    --hero-radius: 26px;
-  }
-  .hero__art{
-    width: var(--hero-size) !important;
-    height: var(--hero-size) !important;
-    border-radius: var(--hero-radius) !important;
-    overflow: hidden !important;
-    isolation: isolate;
-  }
-  .hero__avatar{
-    position: absolute;
-    inset: 8px;                 /* margem interna */
-    width: calc(100% - 16px);
-    height: calc(100% - 16px);
-    object-fit: cover;
-    object-position: 45% 18%;
-    border-radius: inherit;
-    display: block;
-  }
-</style>
+  </style>
   
 </head>
   <body class="theme-light bgfx">
@@ -1519,21 +1497,5 @@ refreshNavControls(); // atualiza controles de navegação
   });
 })();
 </script>
-
-    <style>
-  /* garante que o quadrado corte o excesso */
-  .hero__art{ overflow: hidden !important; }
-
-  /* aumenta só a pessoa (sem mudar o tamanho do quadrado) */
-  .hero .hero__avatar{
-    transform: scale(1.35) translateY(-2%) !important; /* ajuste 1.20–1.50 */
-    transform-origin: 50% 26% !important; /* ancora perto do rosto */
-    image-rendering: auto; /* evita blur em alguns navegadores */
-  }
-</style>
-
 </body>
 </html>
-
-
-
