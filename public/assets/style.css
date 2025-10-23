@@ -1182,6 +1182,16 @@ body.bgfx::after{
   object-position: 50% 30%;
   border-radius: inherit;
   display: block;
-   transform: scale(1.15);     
+   transform: scale(2);     
+}
+
+/* garante que o quadro corte o excesso (não muda layout) */
+.hero__art{ overflow: hidden; }
+
+/* aumenta apenas a Julieta */
+.hero__avatar{
+  transform: scale(1.25);          /* 1.10–1.40 conforme o gosto */
+  transform-origin: 50% 30%;       /* ancora perto do rosto */
+  will-change: transform;          /* perf */
 }
 
