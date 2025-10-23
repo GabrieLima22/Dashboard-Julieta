@@ -211,11 +211,23 @@
       var n=Number(s);
       return isNaN(n)?0:n;
     }
-    function safeDate(iso){
+    function parseLocalISO(iso){
       if(!iso) return null;
-      var d=new Date(iso);
-      return isNaN(d.getTime())?null:d;
+      var match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso));
+      if(!match) return null;
+      var y = +match[1], mo = +match[2]-1, d = +match[3];
+      var dt = new Date(y, mo, d);
+      return isNaN(dt.getTime()) ? null : dt;
     }
+    function dmyLocal(iso){
+      var d = parseLocalISO(iso);
+      return d ? d.toLocaleDateString('pt-BR') : '-';
+    }
+    function timeLocal(iso){
+      var d = parseLocalISO(iso);
+      return d ? d.getTime() : 0;
+    }
+    function safeDate(iso){ return parseLocalISO(iso); }
     function formatBRL(v){ return 'R$ '+Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2}); }
     function esc(str){ str = str === null ? '' : String(str); return str.replace(/[&<>"']/g,function(ch){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]||ch; }); }
     function escAttr(str){ return esc(str).replace(/\n/g,'&#10;'); }
@@ -293,14 +305,14 @@
       // timeline de parcelas da entidade
       var relInst = Array.isArray(detail.installments) ? detail.installments.slice() : [];
       relInst.sort(function(a,b){
-        var da=safeDate(a.due_date), db=safeDate(b.due_date);
+        var da = timeLocal(a.due_date), db = timeLocal(b.due_date);
         if(da && db) return da - db;
         if(da && !db) return -1;
         if(!da && db) return 1;
         return (a.amount||0) - (b.amount||0);
       });
       var timeline = relInst.map(function(item){
-        var d=safeDate(item.due_date); var when=d? d.toLocaleDateString("pt-BR") : "-";
+        var when = dmyLocal(item.due_date);
         var label=[item.course||"", statusLabel(item.status)].filter(Boolean).join(" - ");
         return '<div class="info-line"><div><strong>'+when+'</strong><span>'+esc(label)+'</span></div><span class="tag">'+formatBRL(item.amount)+'</span></div>';
       }).join('');
@@ -332,14 +344,14 @@
 
       var relInst = Array.isArray(detail.installments) ? detail.installments.slice() : [];
       relInst.sort(function(a,b){
-        var da=safeDate(a.due_date), db=safeDate(b.due_date);
+        var da = timeLocal(a.due_date), db = timeLocal(b.due_date);
         if(da && db) return da - db;
         if(da && !db) return -1;
         if(!da && db) return 1;
         return (a.amount||0) - (b.amount||0);
       });
       var lines = relInst.map(function(item){
-        var d=safeDate(item.due_date); var when=d? d.toLocaleDateString("pt-BR") : "-";
+        var when = dmyLocal(item.due_date);
         var status=statusLabel(item.status);
         return '<div class="info-line"><div><strong>'+when+'</strong><span>'+esc(status)+'</span></div><span class="tag">'+formatBRL(item.amount)+'</span></div>';
       }).join('');
@@ -352,13 +364,13 @@
    } else if (kind==='overdue' || kind==='pending' || kind==='paid') {
   // vis�o simplificada (ordenado: mais recente no topo)
   var listItems = norm.slice().sort(function(a,b){
-    var da = a.due_date ? new Date(a.due_date).getTime() : 0;
-    var db = b.due_date ? new Date(b.due_date).getTime() : 0;
+    var da = a.due_date ? timeLocal(a.due_date) : 0;
+    var db = b.due_date ? timeLocal(b.due_date) : 0;
     // DESC: data mais recente primeiro; se empatar, maior valor primeiro
     return (db - da) || ((b.amount||0) - (a.amount||0));
   }).map(function(i){
     var subtitle = [i.entity||'', i.course||''].filter(Boolean).join(' - ');
-    var when = (i.due_date ? new Date(i.due_date).toLocaleDateString('pt-BR') : '-');
+    var when = dmyLocal(i.due_date);
     return '<div class="info-line js-course" data-entity="'+escAttr(i.entity||'-')+'" data-course="'+escAttr(i.course||'-')+'">'+
            '<div><strong>'+when+'</strong><span>'+esc(subtitle)+'</span></div>'+
            '<span class="tag">'+formatBRL(i.amount)+'</span></div>';
