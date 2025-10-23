@@ -1,4 +1,4 @@
-﻿
+
 (function(){
   "use strict";
   var root=document.documentElement, body=document.body;
@@ -114,7 +114,7 @@
     setHue(storedHue);
   }catch(e){ setHue('145'); }
 
-  // bind radios do tema (FIX do toggle que não mudava)
+  // bind radios do tema (FIX do toggle que n�o mudava)
   document.addEventListener('change', function(e){
     var t = e.target;
     if(t && t.name==='theme' && (t.value==='dark' || t.value==='light')){
@@ -198,7 +198,7 @@
 
     // empilha estado atual se navegando para dentro
     if(opts && opts.push && currentState){ navStack.push(currentState); }
-    // visibilidade do botão Voltar
+    // visibilidade do bot�o Voltar
     if(dBack) dBack.style.display = navStack.length ? 'inline-flex' : 'none';
 
     // helpers
@@ -232,7 +232,7 @@
       };
     });
 
-    // agregações
+    // agrega��es
     var total=0, byEntity={};
     norm.forEach(function(i){
       var amount=i.amount||0; total += amount;
@@ -276,12 +276,16 @@
         '</div>';
 
       var courseLines = courses.map(function(c){
-        var value = Number(c.value)||0, rec = Number(c.received)||0, pend = Math.max(0, value - rec);
+        var value = Number(c.value)||0;
+        var rec = Number(c.received)||0;
+        var pend = Math.max(0, value - rec);
+        var header = '<div><strong>'+esc(c.course||'-')+'</strong><span>'+formatBRL(rec)+' recebidos - '+formatBRL(pend)+' a receber</span></div>';
         return '<div class="info-line js-course" data-entity="'+escAttr(name)+'" data-course="'+escAttr(c.course||'-')+'">'+
-                '<div><strong>'+esc(c.course||'-')+'</strong><span>'+formatBRL(rec)+' recebidos - '+formatBRL(pend)+' a receber</span></div>'+
-                '<span class="tag">'+formatBRL(value)+'</span>'+
+               header+
+               '<span class="tag">'+formatBRL(value)+'</span>'+
                '</div>';
       }).join('');
+
       var coursesHtml = courses.length
         ? '<div class="drawer__section"><header class="drawer__section-head"><h4>Cursos</h4><span class="micro">Clique para ver detalhes</span></header><div class="drawer__list">'+courseLines+'</div></div>'
         : '<div class="drawer__section"><div class="alert">Nenhum curso disponível.</div></div>';
@@ -323,7 +327,7 @@
             '<div><span class="micro">Falta</span><div class="drawer__number">'+formatBRL(pendingC)+'</div></div>'+
             '<div><span class="micro">Total</span><div class="drawer__number">'+formatBRL(totalC)+'</div></div>'+
           '</header>'+
-          '<div class="micro">'+esc(entityName)+' · '+esc(courseName)+'</div>'+
+          '<div class="micro">'+esc(entityName)+' � '+esc(courseName)+'</div>'+
         '</div>';
 
       var relInst = Array.isArray(detail.installments) ? detail.installments.slice() : [];
@@ -346,7 +350,7 @@
       dBody.innerHTML = sumHtml + installmentsHtml;
 
    } else if (kind==='overdue' || kind==='pending' || kind==='paid') {
-  // visão simplificada (ordenado: mais recente no topo)
+  // vis�o simplificada (ordenado: mais recente no topo)
   var listItems = norm.slice().sort(function(a,b){
     var da = a.due_date ? new Date(a.due_date).getTime() : 0;
     var db = b.due_date ? new Date(b.due_date).getTime() : 0;
@@ -380,7 +384,7 @@
 
   // Abridores (KPIs + entidades/curso da lista)
   function bindOpeners(){
-    // Função que abre o drawer de acordo com a KPI
+    // Fun��o que abre o drawer de acordo com a KPI
     function handle(kind){
       var raw = Array.isArray(datasetAll) ? datasetAll : [];
       var items = raw.filter(function(i){
@@ -437,4 +441,5 @@
     }
   });
 })();
+
 
