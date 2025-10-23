@@ -1182,5 +1182,6 @@ body.bgfx::after{
   object-position: 50% 30%;
   border-radius: inherit;
   display: block;
+   transform: scale(1.15);     
 }
 
