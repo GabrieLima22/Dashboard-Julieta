@@ -227,6 +227,7 @@ function dmy($iso){
   return $dt ? $dt->format('d/m/Y') : '-';
 }
 
+
 function brl($v){ return 'R$ '.number_format((float)$v, 2, ',', '.'); }
 
 /* =========================
