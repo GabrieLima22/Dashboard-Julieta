@@ -368,7 +368,30 @@ $pctOvd=$base>0?min(100,round($overdue/$base*100)):0;
       100%{ transform:translateX(0) scale(1); opacity:1; }
       
     }
-  </style>
+
+  /* HOTFIX Julieta: garante tamanho e recorte iguais em prod */
+  :root{
+    --hero-size: 132px;   /* ajuste aqui se quiser maior/menor */
+    --hero-radius: 26px;
+  }
+  .hero__art{
+    width: var(--hero-size) !important;
+    height: var(--hero-size) !important;
+    border-radius: var(--hero-radius) !important;
+    overflow: hidden !important;
+    isolation: isolate;
+  }
+  .hero__avatar{
+    position: absolute;
+    inset: 8px;                 /* margem interna */
+    width: calc(100% - 16px);
+    height: calc(100% - 16px);
+    object-fit: cover;
+    object-position: 45% 18%;
+    border-radius: inherit;
+    display: block;
+  }
+</style>
   
 </head>
   <body class="theme-light bgfx">
@@ -1498,3 +1521,4 @@ refreshNavControls(); // atualiza controles de navegação
 </script>
 </body>
 </html>
+
