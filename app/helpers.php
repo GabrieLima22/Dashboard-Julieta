@@ -193,22 +193,32 @@ function money_to_float($s){
 /**
  * Converte vários formatos de data para ISO (YYYY-MM-DD).
  * No front, SEMPRE use dmy() para exibir em BR.
- */
-function parse_date_any($s){
+ */function parse_date_any($s){
   $s = trim(_u($s));
   if($s==='') return null;
 
-  // dd/mm/yyyy, dd/mm/yy, dd-mm-yyyy, etc
-  if(preg_match('/^(\d{1,2})[\/\-\.](\d{1,2})(?:[\/\-\.](\d{2,4}))?$/', $s, $m)){
-    $d=(int)$m[1]; $mo=(int)$m[2]; $y=isset($m[3])?(int)$m[3]:(int)date('Y');
+  // dd/mm/yyyy [hh[:mm[:ss]]]
+  if(preg_match('/^(\d{1,2})[\/\-\.](\d{1,2})(?:[\/\-\.](\d{2,4}))?(?:\s+(\d{1,2})(?::(\d{1,2})(?::(\d{1,2}))?)?)?$/', $s, $m)){
+    $d  = (int)$m[1];
+    $mo = (int)$m[2];
+    $y  = isset($m[3]) ? (int)$m[3] : (int)date('Y');
     if($y<100) $y += 2000;
-    if(checkdate($mo,$d,$y)) return sprintf('%04d-%02d-%02d',$y,$mo,$d);
+    if(checkdate($mo,$d,$y)) return sprintf('%04d-%02d-%02d', $y,$mo,$d);
     return null;
   }
-  // yyyy-mm-dd, yyyy/mm/dd, textos que o strtotime aceita
-  $ts = strtotime($s);
-  return $ts ? date('Y-m-d',$ts) : null;
+
+  // yyyy-mm-dd (ou com / .)
+  if(preg_match('/^(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})/', $s, $m)){
+    $y=(int)$m[1]; $mo=(int)$m[2]; $d=(int)$m[3];
+    if(checkdate($mo,$d,$y)) return sprintf('%04d-%02d-%02d', $y,$mo,$d);
+    return null;
+  }
+
+  // último recurso — evita timezone dance
+  $ts = @strtotime($s);
+  return $ts ? date('Y-m-d', $ts) : null;
 }
+
 
 /** Exibe ISO em formato BR */
 function dmy($iso){
@@ -438,18 +448,29 @@ function get_data($forceRefresh=false){
     $vencIso       = $isConsultoria ? null : ($e['vencimento'] ?: null);
     if($pendingNow > 0 && $vencIso && $vencIso < $todayIso){
       $sumOverdue += $pendingNow;
-    }
+    }// parcela "pending" (o que falta receber) — agora com X/Y
+if ($pendingNow > 0) {
+  $paidCount = count($paidList);          // quantas já foram pagas
+  $nextNo    = $paidCount + 1;            // próxima parcela (X)
+  // melhor esforço para "total de parcelas (Y)":
+  // se alguma paga já veio com inst_total, pegue o maior; senão assuma Y = X
+  $knownTotal = 0;
+  foreach ($paidList as $pp) {
+    if (!empty($pp['inst_total'])) $knownTotal = max($knownTotal, (int)$pp['inst_total']);
+  }
+  $seriesTotal = max($knownTotal, $nextNo);
 
-    // parcela "pending" (o que falta receber)
-    if($pendingNow > 0){
-      $installments[] = [
-        'entity'   => $e['entity'] ?: '-',
-        'course'   => $e['course'] ?: '-',
-        'amount'   => round($pendingNow, 2),
-        'due_date' => $vencIso, // consultoria -> null
-        'status'   => ($vencIso && $vencIso < $todayIso) ? 'overdue' : 'pending',
-      ];
-    }
+  $installments[] = [
+    'entity'     => $e['entity'] ?: '-',
+    'course'     => $e['course'] ?: '-',
+    'amount'     => round($pendingNow, 2),
+    'due_date'   => $vencIso, // consultoria -> null
+    'status'     => ($vencIso && $vencIso < $todayIso) ? 'overdue' : 'pending',
+    'inst_no'    => $nextNo,
+    'inst_total' => $seriesTotal,
+  ];
+}
+
     // ===== AGRUPAMENTO: por CLASSIFICAÇÃO (não por entidade) =====
 $classKey  = normalize_class_key($e['classificacao'] ?? '');
 $className = class_label_from_key($classKey);
