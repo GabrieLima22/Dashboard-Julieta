@@ -1011,3 +1011,150 @@ body.bgfx::after{
   transform: translateZ(0);
 }
 
+/* === HERO – avatar dentro do retângulo === */
+:root{
+  /* ajuste de tamanho do quadrado (pode subir pra 140/150 se quiser) */
+  --hero-size: 124px;
+  --hero-radius: 26px;
+}
+
+/* coluna da esquerda do hero */
+.hero__art{
+  position: relative;
+  width: var(--hero-size);
+  height: var(--hero-size);
+  border-radius: var(--hero-radius);
+  overflow: hidden;        /* garante que nada “vaze” do retângulo */
+  isolation: isolate;
+}
+
+/* o “quadrado de luz” vira o fundo do retângulo */
+.hero__orb{
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    radial-gradient(160% 160% at 20% -20%, var(--accent-3), transparent 60%),
+    var(--accent-2);
+  /* brilho mais forte */
+  box-shadow:
+    0 0 1px 1px rgba(255,255,255,.05) inset,
+    0 22px 55px hsla(var(--accent-h) 80% 55% /.65),
+    0 0 52px 18px hsla(calc(var(--accent-h) + 80) 70% 55% /.45);
+  filter: saturate(1.15);
+}
+
+/* a foto fica DENTRO do quadrado, com margem interna */
+.hero__avatar{
+  position: absolute;
+  inset: 8px;                              /* margem interna igual em todos os lados */
+  width: calc(100% - 16px);
+  height: calc(100% - 16px);
+  object-fit: cover;                        /* preenche sem distorcer */
+  object-position: 38% 18%;                 /* “foca” mais no rosto; ajuste fino aqui */
+  border-radius: inherit;
+  box-shadow:
+    0 10px 28px rgba(0,0,0,.45),
+    0 0 0 1px rgba(255,255,255,.06) inset;
+  z-index: 1;
+}
+
+/* halo externo (glow suave) */
+.hero__halo{
+  position: absolute;
+  inset: -20%;
+  border-radius: inherit;
+  background: radial-gradient(60% 60% at 50% 50%,
+              hsla(var(--accent-h) 80% 62% /.55), transparent 70%);
+  filter: blur(22px);
+  opacity: .95;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* se ainda tiver o texto “JML”, some com ele */
+.hero__initials{ display:none !important; }
+
+/* opcional: um pouco maior no mobile também */
+@media (max-width:640px){
+  :root{ --hero-size: 110px; --hero-radius: 22px; }
+}
+/* =========================================================
+   LIGHT – AURORA com variáveis (página, painéis e itens)
+   Ajuste só os valores abaixo conforme seu gosto.
+========================================================= */
+
+/* 1) Hues de aurora (reaproveitam seu --accent-h) */
+:root{
+  --aurora-h1: var(--accent-h);           /* verde/teal base     */
+  --aurora-h2: calc(var(--accent-h) + 70);/* roxo/azul complementar */
+
+  /* Intensidades padrão (tema escuro já está ok) */
+  --aurora-page-a: .18;   /* cantos da página */
+  --aurora-page-b: .16;
+  --aurora-panel:  .12;   /* brilho nos cards/modais/listas */
+  --aurora-item:   .10;   /* brilho em itens de lista */
+}
+
+/* 2) Tema LIGHT – “fortinho” como no dark */
+:where(html.theme-light,body.theme-light){
+  --aurora-page-a: .30;
+  --aurora-page-b: .26;
+  --aurora-panel:  .20;
+  --aurora-item:   .16;
+}
+
+/* 3) Página (cantos superiores) — overlay independente do bg atual */
+:where(html.theme-light,body.theme-light)::before{
+  content:"";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0; /* fica atrás do conteúdo */
+  background:
+    radial-gradient(60% 60% at 0% 0%,
+      hsl(var(--aurora-h1) 92% 68% / var(--aurora-page-a)), transparent 60%),
+    radial-gradient(60% 60% at 100% 0%,
+      hsl(var(--aurora-h2) 88% 70% / var(--aurora-page-b)), transparent 62%);
+  filter: saturate(1.15) blur(0.2px);
+}
+
+/* 4) Painéis (cards/kpis/filters/modais/drawer) — acrescenta glow sem trocar seu bg */
+:where(html.theme-light,body.theme-light) .card,
+:where(html.theme-light,body.theme-light) .kpis .card,
+:where(html.theme-light,body.theme-light) .filters,
+:where(html.theme-light,body.theme-light) .acc details,
+:where(html.theme-light,body.theme-light) .list-item,
+:where(html.theme-light,body.theme-light) .item,
+:where(html.theme-light,body.theme-light) .config-card,
+:where(html.theme-light,body.theme-light) .modal__panel,
+:where(html.theme-light,body.theme-light) .drawer__panel{
+  background:
+    radial-gradient(140% 120% at 0% 0%,
+      hsl(var(--aurora-h1) 86% 72% / var(--aurora-panel)), transparent 64%),
+    radial-gradient(140% 120% at 100% 0%,
+      hsl(var(--aurora-h2) 82% 70% / calc(var(--aurora-panel) - .03)), transparent 66%),
+    /* mantém seu fundo existente logo abaixo */
+    var(--card-use);
+  background-blend-mode: normal;
+  /* reforço suave de relevo para “sentir” como o dark */
+  box-shadow:
+    0 1px 0 rgba(148,163,184,.16) inset,
+    0 10px 30px rgba(148,163,184,.18);
+}
+
+/* 5) Itens dentro de listas / accordion – brilho mais sutil */
+:where(html.theme-light,body.theme-light) .list .item,
+:where(html.theme-light,body.theme-light) .acc .list-item{
+  background:
+    radial-gradient(120% 110% at 0% 0%,
+      hsl(var(--aurora-h1) 88% 74% / var(--aurora-item)), transparent 62%),
+    radial-gradient(120% 110% at 100% 0%,
+      hsl(var(--aurora-h2) 84% 72% / calc(var(--aurora-item) - .02)), transparent 64%),
+    linear-gradient(180deg,var(--card-use),var(--bg-soft-use));
+}
+
+/* 6) Hero no LIGHT (só casa a saturação com o resto) – opcional */
+:where(html.theme-light,body.theme-light) .hero::before{
+  filter: saturate(1.35) contrast(1.02);
+}
