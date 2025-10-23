@@ -1158,3 +1158,28 @@ body.bgfx::after{
 :where(html.theme-light,body.theme-light) .hero::before{
   filter: saturate(1.35) contrast(1.02);
 }
+
+/* HOTFIX Julieta: garante tamanho e recorte iguais em prod */
+:root{
+  --hero-size: 132px;   /* ajuste aqui se quiser maior/menor */
+  --hero-radius: 26px;
+}
+
+.hero__art{
+  width: var(--hero-size) !important;
+  height: var(--hero-size) !important;
+  border-radius: var(--hero-radius) !important;
+  overflow: hidden !important;
+  isolation: isolate;
+}
+
+.hero__avatar{
+  position: absolute;
+  inset: 8px;                 /* margem interna */
+  width: calc(100% - 16px);
+  height: calc(100% - 16px);
+  object-fit: cover;
+  object-position: 38% 18%;
+  border-radius: inherit;
+  display: block;
+}
