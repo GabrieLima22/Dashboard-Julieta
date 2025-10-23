@@ -327,7 +327,7 @@ $pctOvd=$base>0?min(100,round($overdue/$base*100)):0;
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title><?= htmlspecialchars($cfg['APP_NAME'] ?? 'App', ENT_QUOTES, 'UTF-8') ?></title>
-  <link rel="stylesheet" href="./assets/style.css">
+  <link rel="stylesheet" href="./assets/style.css?v=2025-10-23">
 
   <!-- HOTFIXES/OVERRIDES (sem tocar no style.css) -->
   <style>
@@ -1521,4 +1521,5 @@ refreshNavControls(); // atualiza controles de navegação
 </script>
 </body>
 </html>
+
 
