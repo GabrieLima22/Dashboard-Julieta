@@ -1,8 +1,8 @@
 {
-    "created_at": 1761164637,
+    "created_at": 1761242033,
     "kpis": {
         "receivable": 100300,
-        "received": 229325.89,
+        "received": 322325.89,
         "overdue": 62200
     },
     "entities": [
@@ -702,10 +702,199 @@
                     "vencimento": "2025-12-20",
                     "class": "pró-labore",
                     "payments": []
+                },
+                {
+                    "entity": "PRÓ-LABORE JML",
+                    "course": "JANEIRO",
+                    "ch": "1",
+                    "range": "20\/01\/2025 — 20\/01\/2025",
+                    "date_start": "2025-01-20",
+                    "date_end": "2025-01-20",
+                    "value": 9000,
+                    "received": 9000,
+                    "pending": 0,
+                    "vencimento": "2025-01-15",
+                    "class": "pró-labore",
+                    "payments": [
+                        {
+                            "amount": 9000,
+                            "date": "2025-01-15",
+                            "inst_no": 1,
+                            "inst_total": 1
+                        }
+                    ]
+                },
+                {
+                    "entity": "PRÓ-LABORE JML",
+                    "course": "FEVEREIRO",
+                    "ch": "1",
+                    "range": "20\/02\/2025 — 20\/02\/2025",
+                    "date_start": "2025-02-20",
+                    "date_end": "2025-02-20",
+                    "value": 9000,
+                    "received": 9000,
+                    "pending": 0,
+                    "vencimento": "2025-02-20",
+                    "class": "pró-labore",
+                    "payments": [
+                        {
+                            "amount": 9000,
+                            "date": "2025-02-20",
+                            "inst_no": 1,
+                            "inst_total": 1
+                        }
+                    ]
+                },
+                {
+                    "entity": "PRÓ-LABORE JML",
+                    "course": "MARÇO",
+                    "ch": "1",
+                    "range": "20\/03\/2025 — 20\/03\/2025",
+                    "date_start": "2025-03-20",
+                    "date_end": "2025-03-20",
+                    "value": 9000,
+                    "received": 9000,
+                    "pending": 0,
+                    "vencimento": "2025-03-20",
+                    "class": "pró-labore",
+                    "payments": [
+                        {
+                            "amount": 9000,
+                            "date": "2025-03-20",
+                            "inst_no": 1,
+                            "inst_total": 1
+                        }
+                    ]
+                },
+                {
+                    "entity": "PRÓ-LABORE JML",
+                    "course": "ABRIL",
+                    "ch": "1",
+                    "range": "20\/04\/2025 — 20\/04\/2025",
+                    "date_start": "2025-04-20",
+                    "date_end": "2025-04-20",
+                    "value": 9000,
+                    "received": 9000,
+                    "pending": 0,
+                    "vencimento": "2025-04-17",
+                    "class": "pró-labore",
+                    "payments": [
+                        {
+                            "amount": 9000,
+                            "date": "2025-04-17",
+                            "inst_no": 1,
+                            "inst_total": 1
+                        }
+                    ]
+                },
+                {
+                    "entity": "PRÓ-LABORE JML",
+                    "course": "MAIO",
+                    "ch": "1",
+                    "range": "20\/05\/2025 — 20\/05\/2025",
+                    "date_start": "2025-05-20",
+                    "date_end": "2025-05-20",
+                    "value": 9000,
+                    "received": 9000,
+                    "pending": 0,
+                    "vencimento": "2025-05-19",
+                    "class": "pró-labore",
+                    "payments": [
+                        {
+                            "amount": 9000,
+                            "date": "2025-05-19",
+                            "inst_no": 1,
+                            "inst_total": 1
+                        }
+                    ]
+                },
+                {
+                    "entity": "PRÓ-LABORE JML",
+                    "course": "JUNHO",
+                    "ch": "1",
+                    "range": "20\/06\/2025 — 20\/06\/2025",
+                    "date_start": "2025-06-20",
+                    "date_end": "2025-06-20",
+                    "value": 9000,
+                    "received": 9000,
+                    "pending": 0,
+                    "vencimento": "2025-06-18",
+                    "class": "pró-labore",
+                    "payments": [
+                        {
+                            "amount": 9000,
+                            "date": "2025-06-18",
+                            "inst_no": 1,
+                            "inst_total": 1
+                        }
+                    ]
+                },
+                {
+                    "entity": "PRÓ-LABORE JML",
+                    "course": "JULHO",
+                    "ch": "1",
+                    "range": "20\/07\/2025 — 20\/07\/2025",
+                    "date_start": "2025-07-20",
+                    "date_end": "2025-07-20",
+                    "value": 9000,
+                    "received": 9000,
+                    "pending": 0,
+                    "vencimento": "2025-07-16",
+                    "class": "pró-labore",
+                    "payments": [
+                        {
+                            "amount": 9000,
+                            "date": "2025-07-16",
+                            "inst_no": 1,
+                            "inst_total": 1
+                        }
+                    ]
+                },
+                {
+                    "entity": "PRÓ-LABORE JML",
+                    "course": "AGOSTO",
+                    "ch": "1",
+                    "range": "20\/08\/2025 — 20\/08\/2025",
+                    "date_start": "2025-08-20",
+                    "date_end": "2025-08-20",
+                    "value": 15000,
+                    "received": 15000,
+                    "pending": 0,
+                    "vencimento": "2025-08-15",
+                    "class": "pró-labore",
+                    "payments": [
+                        {
+                            "amount": 15000,
+                            "date": "2025-08-15",
+                            "inst_no": 1,
+                            "inst_total": 1
+                        }
+                    ]
+                },
+                {
+                    "entity": "PRÓ-LABORE JML",
+                    "course": "SETEMBRO",
+                    "ch": "1",
+                    "range": "20\/09\/2025 — 20\/09\/2025",
+                    "date_start": "2025-09-20",
+                    "date_end": "2025-09-20",
+                    "value": 15000,
+                    "received": 15000,
+                    "pending": 0,
+                    "vencimento": "2025-09-19",
+                    "class": "pró-labore",
+                    "payments": [
+                        {
+                            "amount": 15000,
+                            "date": "2025-09-19",
+                            "inst_no": 1,
+                            "inst_total": 1
+                        }
+                    ]
                 }
             ],
-            "total": 36000,
-            "received": 12000
+            "total": 129000,
+            "received": 105000
         },
         {
             "key": "simples repasse",
@@ -1149,6 +1338,87 @@
             "amount": 12000,
             "due_date": "2025-12-20",
             "status": "pending"
+        },
+        {
+            "entity": "PRÓ-LABORE JML",
+            "course": "JANEIRO",
+            "amount": 9000,
+            "due_date": "2025-01-15",
+            "status": "paid",
+            "inst_no": 1,
+            "inst_total": 1
+        },
+        {
+            "entity": "PRÓ-LABORE JML",
+            "course": "FEVEREIRO",
+            "amount": 9000,
+            "due_date": "2025-02-20",
+            "status": "paid",
+            "inst_no": 1,
+            "inst_total": 1
+        },
+        {
+            "entity": "PRÓ-LABORE JML",
+            "course": "MARÇO",
+            "amount": 9000,
+            "due_date": "2025-03-20",
+            "status": "paid",
+            "inst_no": 1,
+            "inst_total": 1
+        },
+        {
+            "entity": "PRÓ-LABORE JML",
+            "course": "ABRIL",
+            "amount": 9000,
+            "due_date": "2025-04-17",
+            "status": "paid",
+            "inst_no": 1,
+            "inst_total": 1
+        },
+        {
+            "entity": "PRÓ-LABORE JML",
+            "course": "MAIO",
+            "amount": 9000,
+            "due_date": "2025-05-19",
+            "status": "paid",
+            "inst_no": 1,
+            "inst_total": 1
+        },
+        {
+            "entity": "PRÓ-LABORE JML",
+            "course": "JUNHO",
+            "amount": 9000,
+            "due_date": "2025-06-18",
+            "status": "paid",
+            "inst_no": 1,
+            "inst_total": 1
+        },
+        {
+            "entity": "PRÓ-LABORE JML",
+            "course": "JULHO",
+            "amount": 9000,
+            "due_date": "2025-07-16",
+            "status": "paid",
+            "inst_no": 1,
+            "inst_total": 1
+        },
+        {
+            "entity": "PRÓ-LABORE JML",
+            "course": "AGOSTO",
+            "amount": 15000,
+            "due_date": "2025-08-15",
+            "status": "paid",
+            "inst_no": 1,
+            "inst_total": 1
+        },
+        {
+            "entity": "PRÓ-LABORE JML",
+            "course": "SETEMBRO",
+            "amount": 15000,
+            "due_date": "2025-09-19",
+            "status": "paid",
+            "inst_no": 1,
+            "inst_total": 1
         }
     ]
 }
