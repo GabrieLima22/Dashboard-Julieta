@@ -587,4 +587,3 @@ function save_settings($in){
   @file_put_contents(_settings_path(), json_encode($s, JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT));
   return $s;
 }
-
