@@ -407,8 +407,8 @@ $pctOvd=$base>0?min(100,round($overdue/$base*100)):0;
         <div class="progress"><div class="bar bar--rec" style="width:<?= $pctRec ?>%"></div></div>
         <div class="sub">Vencidos + A vencer</div>
       </div>
-      <div class="card kpi kpi--rcv" data-open="paid" tabindex="0" role="button" aria-label="Abrir detalhes: Recebido" onclick="window.dashboardOpenStatus && window.dashboardOpenStatus('paid')">
-        <h4>Recebido<?= $hasFilter ? ' (visão geral)' : '' ?></h4>
+      <div class="card kpi kpi--rcv" data-open="paid" tabindex="0" role="button" aria-label="Abrir detalhes: Recebidos" onclick="window.dashboardOpenStatus && window.dashboardOpenStatus('paid')">
+        <h4>Recebidos<?= $hasFilter ? ' (visão geral)' : '' ?></h4>
         <div class="amount amount--ok"><?= brl($received) ?></div>
         <div class="progress"><div class="bar bar--rcv" style="width:<?= $pctRcvd ?>%"></div></div>
         <div class="sub">Total de Honorários + Pró-labore + Repasses</div>
@@ -1105,11 +1105,31 @@ function collectEntityDetail(name){
       var n=Number(s);
       return isNaN(n)?0:n;
     }
-    function safeDate(iso){
-      if(!iso) return null;
-      var d=new Date(iso);
-      return isNaN(d.getTime())?null:d;
-    }
+
+// Parse "YYYY-MM-DD" como data LOCAL (sem fuso/UTC)
+function parseLocalISO(iso){
+  if(!iso) return null;
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso));
+  if(!m) return null;
+  const y = +m[1], mo = +m[2]-1, d = +m[3];
+  return new Date(y, mo, d); // <- local
+}
+
+// Timestamp local para sort
+function timeLocal(iso){
+  const d = parseLocalISO(iso);
+  return d ? d.getTime() : 0;
+}
+
+// dd/mm/aaaa sem “voltar um dia”
+function dmyLocal(iso){
+  const d = parseLocalISO(iso);
+  return d ? d.toLocaleDateString('pt-BR') : '—';
+}
+
+function safeDate(iso){ return parseLocalISO(iso); }
+
+
     function formatBRL(v){ return 'R$ '+Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2}); }
     function esc(str){ str = str === null ? '' : String(str); return str.replace(/[&<>"']/g,function(ch){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]||ch; }); }
     function escAttr(str){ return esc(str).replace(/\n/g,'&#10;'); }
@@ -1186,13 +1206,12 @@ function collectEntityDetail(name){
 
       // timeline de parcelas da entidade
       var relInst = Array.isArray(detail.installments) ? detail.installments.slice() : [];
-      relInst.sort(function(a,b){
-        var da=safeDate(a.due_date), db=safeDate(b.due_date);
-        if(da && db) return da - db;
-        if(da && !db) return -1;
-        if(!da && db) return 1;
-        return (a.amount||0) - (b.amount||0);
-      });
+     relInst.sort(function(a,b){
+  var da = timeLocal(a.due_date);
+  var db = timeLocal(b.due_date);
+  return (db - da) || ((b.amount||0)-(a.amount||0)); // recente primeiro
+});
+
       var timeline = relInst.map(function(item){
         var d=safeDate(item.due_date); var when=d? d.toLocaleDateString("pt-BR") : "-";
         var label=[item.course||"", statusLabel(item.status)].filter(Boolean).join(" - ");
@@ -1235,10 +1254,7 @@ refreshNavControls(); // atualiza controles de navegação
     if(!value || value === '-') return '';
     return '<span class="pill">'+label+': '+esc(value)+'</span>';
   }
-  function dmyLocal(iso){
-    if(!iso) return '—';
-    var d = new Date(iso); return isNaN(d.getTime()) ? '—' : d.toLocaleDateString('pt-BR');
-  }
+
 
   var subtitleClass = 'micro course-subtitle';
   if ((courseName || '').length > 48) {
@@ -1274,13 +1290,14 @@ refreshNavControls(); // atualiza controles de navegação
   // extrato (parcelas relacionadas)
   var relInst = Array.isArray(detail.installments) ? detail.installments.slice() : [];
   relInst.sort(function(a,b){
-    var da=a.due_date?new Date(a.due_date).getTime():0;
-    var db=b.due_date?new Date(b.due_date).getTime():0;
+    var da=a.due_date?timeLocal(a.due_date):0;
+    var db=b.due_date?timeLocal(b.due_date):0;
     return (db-da) || ((b.amount||0)-(a.amount||0)); // recente primeiro
   });
 
   var lines = relInst.map(function(item){
-    var when   = item.due_date ? new Date(item.due_date).toLocaleDateString('pt-BR') : '-';
+    var when   = item.due_date ? dmyLocal(item.due_date) : '-';
+
     var status = statusLabel(item.status);
     var chip   = '';
     // se vierem inst_no/inst_total, mostra a “bolacha” da parcela
@@ -1328,11 +1345,12 @@ refreshNavControls(); // atualiza controles de navegação
 
     // 2) dentro de cada curso, ordena por data ASC e marca "install_no"
     Object.keys(buckets).forEach(function(k){
-      buckets[k].sort(function(a,b){
-        var da = a.due_date ? new Date(a.due_date).getTime() : 0;
-        var db = b.due_date ? new Date(b.due_date).getTime() : 0;
-        return da - db; // ascendente para achar 1ª, 2ª, 3ª...
-      });
+    buckets[k].sort(function(a,b){
+  var da = timeLocal(a.due_date);
+  var db = timeLocal(b.due_date);
+  return da - db; // ascendente
+});
+
       buckets[k].forEach(function(it, idx){
         it.__install_no = idx + 1;              // 1,2,3...
         // se no futuro helpers trouxer "inst_total", usamos; senão deixamos só ordinal
@@ -1341,16 +1359,18 @@ refreshNavControls(); // atualiza controles de navegação
     });
 
     // 3) ordena lista final por data DESC (extrato: mais recente no topo)
-    items.sort(function(a,b){
-      var da = a.due_date ? new Date(a.due_date).getTime() : 0;
-      var db = b.due_date ? new Date(b.due_date).getTime() : 0;
-      return (db - da) || ((b.amount||0) - (a.amount||0));
-    });
+ items.sort(function(a,b){
+  var da = timeLocal(a.due_date);
+  var db = timeLocal(b.due_date);
+  return (db - da) || ((b.amount||0) - (a.amount||0));
+});
+
+
   } else {
     // pendentes/vencidos: mantém comportamento atual (por data DESC)
     items.sort(function(a,b){
-      var da = a.due_date ? new Date(a.due_date).getTime() : 0;
-      var db = b.due_date ? new Date(b.due_date).getTime() : 0;
+      var da = a.due_date ? timeLocal(a.due_date) : 0;
+      var db = b.due_date ? timeLocal(b.due_date) : 0;
       return (db - da) || ((b.amount||0) - (a.amount||0));
     });
   }
@@ -1358,7 +1378,8 @@ refreshNavControls(); // atualiza controles de navegação
   // render
   var listItems = items.map(function(i){
     var subtitle = [i.entity||'', i.course||''].filter(Boolean).join(' - ');
-    var when = (i.due_date ? new Date(i.due_date).toLocaleDateString('pt-BR') : '-');
+   var when = (i.due_date ? dmyLocal(i.due_date) : '-');
+
 
     // chip de parcela só quando for "Recebido"
     var parcelaChip = '';
