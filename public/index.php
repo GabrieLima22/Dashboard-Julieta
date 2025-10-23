@@ -351,7 +351,7 @@ $pctOvd=$base>0?min(100,round($overdue/$base*100)):0;
     <div class="hero" role="banner">
       <div class="hero__art" aria-hidden="true">
         <span class="hero__orb"></span>
-        <span class="hero__initials">JML</span>
+       <img src="./assets/julietaIMG.png" alt="Julieta" class="hero__avatar">
         <span class="hero__halo"></span>
       </div>
       <div class="hero__text">
