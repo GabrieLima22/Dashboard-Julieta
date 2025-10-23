@@ -338,6 +338,10 @@ $pctOvd=$base>0?min(100,round($overdue/$base*100)):0;
   min-height: 6px !important;
   overflow: visible !important;
 }
+ 
+  :root{ --hero-size: 150px; }
+  .hero{ grid-template-columns: var(--hero-size) minmax(0,1fr) auto !important; }
+
 
     
     @keyframes ios-in{
@@ -1429,6 +1433,7 @@ refreshNavControls(); // atualiza controles de navegação
 </script>
 </body>
 </html>
+
 
 
 
