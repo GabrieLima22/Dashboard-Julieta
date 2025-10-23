@@ -1519,7 +1519,21 @@ refreshNavControls(); // atualiza controles de navegação
   });
 })();
 </script>
+
+    <style>
+  /* garante que o quadrado corte o excesso */
+  .hero__art{ overflow: hidden !important; }
+
+  /* aumenta só a pessoa (sem mudar o tamanho do quadrado) */
+  .hero .hero__avatar{
+    transform: scale(1.35) translateY(-2%) !important; /* ajuste 1.20–1.50 */
+    transform-origin: 50% 26% !important; /* ancora perto do rosto */
+    image-rendering: auto; /* evita blur em alguns navegadores */
+  }
+</style>
+
 </body>
 </html>
+
 
 
