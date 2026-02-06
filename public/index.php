@@ -95,15 +95,24 @@ $__viewParam = $_GET['view'] ?? 'list';
 $__allowedViews = ['list','grid','carousel'];
 $view = in_array($__viewParam, $__allowedViews, true) ? $__viewParam : 'list';
 
+$currentYear = (int)date('Y');
+$currentMonth = (int)date('m');
+
 $Q = [
   'q'         => trim($_GET['q'] ?? ''),
   'status'    => $_GET['status'] ?? 'all',   // all|pending|overdue|paid
+  'year'      => trim($_GET['year'] ?? (string)$currentYear), // YYYY
   'month'     => trim($_GET['month'] ?? ''), // YYYY-MM
   'due_in'    => (int)($_GET['due_in'] ?? 7),// 7|15|30
   'mode'      => $_GET['mode'] ?? 'due',     // 'due' | 'period'
 ];
 $__allowedModes = ['due','period'];
 if (!in_array($Q['mode'], $__allowedModes, true)) $Q['mode'] = 'due';
+// Validate year
+$selectedYear = (int)$Q['year'];
+// Não permite ano futuro: 2027 só aparece/funciona a partir de 01/01/2027.
+if ($selectedYear < 2024 || $selectedYear > $currentYear) $selectedYear = $currentYear;
+$Q['year'] = (string)$selectedYear;
 
 function qstr($overrides=[]){
   $params = $_GET;
@@ -158,17 +167,20 @@ function status_label($status, $uppercase=false){
   return $label;
 }
 
-// últimos 6 meses para chips de mês
+// Meses dinâmicos baseados no ano selecionado
 $lastMonths = [];
 if ($logged){
-  $now = new DateTime('first day of this month');
-  $yearStart = new DateTime($now->format('Y').'-01-01');
-  $cursor = clone $now;
-  while ($cursor >= $yearStart && count($lastMonths) < 6){
-    $lastMonths[] = $cursor->format('Y-m');
-    $cursor->modify('-1 month');
+  if ($selectedYear < $currentYear) {
+    // Ano passado: mostra todos os 12 meses
+    for ($m = 1; $m <= 12; $m++) {
+      $lastMonths[] = sprintf('%04d-%02d', $selectedYear, $m);
+    }
+  } else {
+    // Ano atual: mostra até o mês atual
+    for ($m = 1; $m <= $currentMonth; $m++) {
+      $lastMonths[] = sprintf('%04d-%02d', $selectedYear, $m);
+    }
   }
-  $lastMonths = array_reverse($lastMonths);
 }
 
 // aplica filtros na lista de parcelas (para os drawers)
@@ -176,6 +188,8 @@ $filteredInstallments = [];
 if ($logged){
   foreach($data['installments'] as $i){
     $ok = true;
+    // Filtro de ano
+    if($Q['year'] && substr($i['due_date'] ?? '',0,4) !== $Q['year']) $ok=false;
     if($Q['status']!=='all' && ($i['status'] ?? '')!==$Q['status']) $ok=false;
     if($Q['month'] && substr($i['due_date'] ?? '',0,7)!==$Q['month']) $ok=false;
     if($Q['q']){
@@ -217,7 +231,14 @@ if($logged && !empty($data['entities'])){
 
   foreach($data['entities'] as $e){
     if($hasReal && isset($e['name']) && trim($e['name'])==='-') continue; // remove "-" apenas se existir outra entidade
-    $bucket=['name'=>$e['name'] ?? '-', 'items'=>[], 'total'=>0.0, 'received'=>0.0, 'pending'=>0.0];
+    $bucket=[
+      'key'      => $e['key'] ?? '',
+      'name'     => $e['name'] ?? '-',
+      'items'    => [],
+      'total'    => 0.0,
+      'received' => 0.0,
+      'pending'  => 0.0
+    ];
 
     foreach($e['items'] as $it){
       // busca textual
@@ -229,6 +250,10 @@ if($logged && !empty($data['entities'])){
   $exists = false;
   foreach ($data['installments'] as $pi) {
     if (($pi['entity'] ?? '-') === ($it['entity'] ?? '-') && ($pi['course'] ?? '-') === ($it['course'] ?? '-')) {
+      // ano (sempre aplicado)
+      if ($Q['year'] !== '' && substr($pi['due_date'] ?? '', 0, 4) !== $Q['year']) {
+        continue;
+      }
       // status (se selecionado)
       if ($Q['status'] !== 'all' && ($pi['status'] ?? '') !== $Q['status']) {
         continue;
@@ -258,6 +283,9 @@ if($logged && !empty($data['entities'])){
   if ($Q['status'] !== 'all') {
     $hasStatus = false;
     foreach ($data['installments'] as $pi) {
+      if ($Q['year'] !== '' && substr($pi['due_date'] ?? '', 0, 4) !== $Q['year']) {
+        continue;
+      }
       if (
         ($pi['entity'] ?? '') === ($it['entity'] ?? '') &&
         ($pi['course'] ?? '') === ($it['course'] ?? '') &&
@@ -276,6 +304,9 @@ if($logged && !empty($data['entities'])){
 if ($Q['status'] !== 'all') {
   $hasStatus = false;
   foreach ($data['installments'] as $pi) {
+    if ($Q['year'] !== '' && substr($pi['due_date'] ?? '', 0, 4) !== $Q['year']) {
+      continue;
+    }
     if (
       ($pi['entity'] ?? '') === ($it['entity'] ?? '') &&
       ($pi['course'] ?? '') === ($it['course'] ?? '') &&
@@ -308,13 +339,32 @@ $visibleGroups = $groupFiltered;
 $hiddenGroups  = [];
 
 // flag de filtro aplicado
-$hasFilter = ($Q['status']!=='all' || $Q['month']!=='' || $Q['q']!=='');
+$hasFilter = ($Q['status']!=='all' || $Q['month']!=='' || $Q['q']!=='' || $selectedYear !== $currentYear);
 
-// ===== KPIs (regra nova: vem prontos do helpers) =====
-$kpis = $data['kpis'] ?? ['receivable'=>0,'received'=>0,'overdue'=>0];
-$receivable = (float)$kpis['receivable'];
-$received   = (float)$kpis['received'];
-$overdue    = (float)$kpis['overdue'];
+// ===== KPIs (recalculados com filtro de ano) =====
+$yearFilteredInstallments = array_values(array_filter($data['installments'] ?? [], function($i) use ($Q) {
+  if ($Q['year'] && substr($i['due_date'] ?? '', 0, 4) !== $Q['year']) return false;
+  return true;
+}));
+
+$receivable = 0.0;
+$received   = 0.0;
+$overdue    = 0.0;
+foreach ($yearFilteredInstallments as $inst) {
+  $amt = (float)($inst['amount'] ?? 0);
+  $status = $inst['status'] ?? '';
+  if ($status === 'paid') {
+    $received += $amt;
+  } elseif ($status === 'overdue') {
+    $overdue += $amt;
+    $receivable += $amt;
+  } elseif ($status === 'pending') {
+    $receivable += $amt;
+  }
+}
+$receivable = round($receivable, 2);
+$received   = round($received, 2);
+$overdue    = round($overdue, 2);
 $base=max(1,$receivable+$received);
 $pctRec=min(100,round($receivable/$base*100));
 $pctRcvd=min(100,round($received/$base*100));
@@ -389,7 +439,7 @@ $pctOvd=$base>0?min(100,round($overdue/$base*100)):0;
       <div class="hero__text">
         <span class="hero__tag">JML - Dashboard Financeiro</span>
         <h1 class="hero__title"><?= htmlspecialchars($cfg['APP_NAME'] ?? 'App', ENT_QUOTES, 'UTF-8') ?></h1>
-        <p class="hero__subtitle">Curadoria de dados 2025</p>
+        <p class="hero__subtitle">Curadoria de dados <?= $selectedYear ?></p>
       </div>
       <div class="hero__actions">
         <button id="btnConfig" class="btn hero__btn" type="button">&#9881; Configurar</button>
@@ -399,6 +449,10 @@ $pctOvd=$base>0?min(100,round($overdue/$base*100)):0;
         </form>
       </div>
     </div>
+
+    <?php if ($logged && empty($yearFilteredInstallments)): ?>
+      <div class="alert">Nenhum recebimento ou valor a receber em <?= htmlspecialchars((string)$selectedYear, ENT_QUOTES, 'UTF-8') ?>.</div>
+    <?php endif; ?>
 
     <!-- KPIs (regra nova) -->
     <div class="grid kpis">
@@ -492,6 +546,21 @@ $pctOvd=$base>0?min(100,round($overdue/$base*100)):0;
     <!-- FILTERS -->
     <div class="filters filters--list">
 
+<!-- ANO -->
+<div class="filters__group">
+  <span class="filters__label">Ano</span>
+  <div class="chips-line">
+    <?php
+      $years = range($currentYear, 2024, -1);
+      foreach($years as $yr):
+        $active = $selectedYear === $yr ? 'is-active' : '';
+        $href = '?'.qstr(['year'=>$yr, 'month'=>null]);
+    ?>
+      <a class="chip chip--toggle <?= $active ?>" href="<?= $href ?>"><?= $yr ?></a>
+    <?php endforeach; ?>
+  </div>
+</div>
+
 <!-- MODO -->
 <div class="filters__group">
   <span class="filters__label">Modo</span>
@@ -545,13 +614,14 @@ $pctOvd=$base>0?min(100,round($overdue/$base*100)):0;
       <!-- BUSCA -->
       <div class="filters__group filters__search">
         <form method="get" class="search">
+          <input type="hidden" name="year" value="<?= htmlspecialchars($Q['year'], ENT_QUOTES, 'UTF-8') ?>">
           <?php if($Q['mode']!=='due'): ?>
           <input type="hidden" name="mode" value="<?= htmlspecialchars($Q['mode'], ENT_QUOTES, 'UTF-8') ?>"><?php endif; ?>
           <?php if($Q['status']!=='all'): ?><input type="hidden" name="status" value="<?= htmlspecialchars($Q['status'], ENT_QUOTES, 'UTF-8') ?>"><?php endif; ?>
           <?php if($Q['month']!==''): ?><input type="hidden" name="month" value="<?= htmlspecialchars($Q['month'], ENT_QUOTES, 'UTF-8') ?>"><?php endif; ?>
           <input class="input" type="search" name="q" value="<?= htmlspecialchars($Q['q'], ENT_QUOTES, 'UTF-8') ?>" placeholder="Buscar entidade/curso…">
           <button class="btn" type="submit">Buscar</button>
-          <a class="btn" href="./">Limpar</a>
+          <a class="btn" href="./?year=<?= $selectedYear ?>">Limpar</a>
         </form>
       </div>
     </div>
@@ -572,6 +642,11 @@ $pctOvd=$base>0?min(100,round($overdue/$base*100)):0;
            data-tip="<?= htmlspecialchars('Total '.brl($entTotal).' - Recebido '.brl($entReceived), ENT_QUOTES, 'UTF-8') ?>">
         <div class="entity" style="margin-bottom:8px">
           <?= htmlspecialchars($e['name'] ?? '-', ENT_QUOTES, 'UTF-8') ?>
+          <?php if (($e['key'] ?? '') === 'sem classificacao' && $received <= 0 && $receivable > 0): ?>
+            <div class="micro" style="margin-top:4px; opacity:.85">
+              Ainda nada recebido em <?= htmlspecialchars((string)$selectedYear, ENT_QUOTES, 'UTF-8') ?>. Veja o que você tem a receber.
+            </div>
+          <?php endif; ?>
         </div>
         <div class="progress"><div class="bar" style="width:<?= $pct ?>%" title="<?= $pct ?>%"></div></div>
         <div class="chips" style="margin-top:10px">
@@ -655,7 +730,14 @@ $tip = htmlspecialchars(
           <?php foreach($groupFiltered as $e): ?>
             <?php [$entTotal, $entReceived, $entPending] = entity_financials($e['items'] ?? []); $pct=$entTotal>0?min(100,round($entReceived/$entTotal*100)):0; ?>
             <div class="card js-entity" data-entity="<?= htmlspecialchars($e['name'] ?? '-', ENT_QUOTES, 'UTF-8') ?>" style="min-width:340px; scroll-snap-align:start">
-              <div class="entity" style="margin-bottom:8px"><?= htmlspecialchars($e['name'] ?? '', ENT_QUOTES, 'UTF-8') ?></div>
+              <div class="entity" style="margin-bottom:8px">
+                <?= htmlspecialchars($e['name'] ?? '', ENT_QUOTES, 'UTF-8') ?>
+                <?php if (($e['key'] ?? '') === 'sem classificacao' && $received <= 0 && $receivable > 0): ?>
+                  <div class="micro" style="margin-top:4px; opacity:.85">
+                    Ainda nada recebido em <?= htmlspecialchars((string)$selectedYear, ENT_QUOTES, 'UTF-8') ?>. Veja o que você tem a receber.
+                  </div>
+                <?php endif; ?>
+              </div>
               <div class="progress"><div class="bar" style="width:<?= $pct ?>%" title="<?= $pct ?>%"></div></div>
               <div class="chips" style="margin-top:10px">
                 <span class="chip">Recebido <?= brl($entReceived) ?></span>
@@ -680,6 +762,11 @@ $tip = htmlspecialchars(
             <summary>
               <div class="entity js-entity" data-entity="<?= htmlspecialchars($e['name'] ?? '-', ENT_QUOTES, 'UTF-8') ?>">
                 <?= htmlspecialchars($e['name'] ?? '-', ENT_QUOTES, 'UTF-8') ?>
+                <?php if (($e['key'] ?? '') === 'sem classificacao' && $received <= 0 && $receivable > 0): ?>
+                  <div class="micro" style="margin-top:4px; opacity:.85">
+                    Ainda nada recebido em <?= htmlspecialchars((string)$selectedYear, ENT_QUOTES, 'UTF-8') ?>. Veja o que você tem a receber.
+                  </div>
+                <?php endif; ?>
               </div>
               <div class="chips">
                 <span class="chip">Recebido <?= brl($entReceived) ?></span>
@@ -844,7 +931,7 @@ $tip = htmlspecialchars(
   </div>
 
   <!-- datasets -->
-  <script id="dataset" type="application/json"><?= json_encode(['all'=>$data['installments'] ?? []], JSON_UNESCAPED_UNICODE) ?></script>
+  <script id="dataset" type="application/json"><?= json_encode(['all'=>$yearFilteredInstallments], JSON_UNESCAPED_UNICODE) ?></script>
   <script id="entitiesDataset" type="application/json"><?= json_encode($groupFiltered, JSON_UNESCAPED_UNICODE) ?></script>
   <script id="filteredInstallments" type="application/json"><?= json_encode($filteredInstallments, JSON_UNESCAPED_UNICODE) ?></script>
 
