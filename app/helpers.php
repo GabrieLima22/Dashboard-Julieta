@@ -263,7 +263,7 @@ $classificacao = squash_spaces($rawClass); // mantém a versão “humana”
   $venc      = parse_date_any($get(['vencimento']));
 
   // regra: Consultoria não tem datas
-  if ($classificacao === 'consultoria') {
+  if (normalize_class_key($classificacao) === 'consultoria') {
     $dateStart = null;
     $dateEnd   = null;
     $venc      = null;

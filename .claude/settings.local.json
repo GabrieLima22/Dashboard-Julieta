@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir:*)",
+      "WebFetch(domain:docs.google.com)",
+      "WebFetch(domain:doc-14-5s-sheets.googleusercontent.com)"
+    ]
+  }
+}
